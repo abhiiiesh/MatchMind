@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AgentMessage",
+  "description": "Standardized schema for inter-agent communication across the MatchMind pipeline.",
+  "type": "object",
+  "required": [
+    "message_id",
+    "timestamp",
+    "source_agent",
+    "target_agents",
+    "match_id",
+    "event_index",
+    "match_minute",
+    "message_type",
+    "payload"
+  ],
+  "properties": {
+    "message_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source_agent": {
+      "type": "string",
+      "enum": [
+        "simulator",
+        "ingestion_agent",
+        "metrics_agent",
+        "context_agent",
+        "narrative_agent",
+        "analyst_persona_agent",
+        "casual_persona_agent",
+        "translator_agent",
+        "factcheck_agent"
+      ]
+    },
+    "target_agents": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "match_id": {
+      "type": "string"
+    },
+    "event_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "match_minute": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "RAW_EVENT",
+        "NORMALIZED_EVENT",
+        "METRIC_UPDATE",
+        "CONTEXT_ENRICHMENT",
+        "NARRATIVE_DRAFT",
+        "PERSONA_COMMENTARY",
+        "TRANSLATED_COMMENTARY",
+        "VERIFIED_OUTPUT",
+        "FLAGGED_HALLUCINATION",
+        "SYSTEM_ALERT"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    },
+    "metadata": {
+      "type": "object",
+      "default": {}
+    }
+  }
+}
