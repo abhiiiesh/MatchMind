@@ -147,8 +147,13 @@ export const App: React.FC = () => {
           <AudioCommentaryBar
             latestNarrative={latestNarrative}
             activePersona={activePersona}
+            activeLanguage={activeLanguage}
           />
-          <ExplainabilityCard narrative={latestNarrative} />
+          <ExplainabilityCard
+            narrative={latestNarrative}
+            onSelectPlayer={setFocusedPlayer}
+            currentEventPlayerName={currentEvent?.player?.name}
+          />
           <div className="flex-1 min-h-[360px]">
             <LiveFeed
               messages={feedMessages}

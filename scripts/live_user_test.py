@@ -62,7 +62,7 @@ def run_live_test():
             ("Header", "header"),
             ("Pitch Visualization", "svg"),
             ("Metrics Panel", "text=EXPECTED GOALS"),
-            ("Explainability Card", "text=Awaiting live tactical, text=WHY THIS MOMENT MATTERS"),
+            ("Explainability Card", ":text('Awaiting live tactical'), :text('WHY THIS MOMENT MATTERS')"),
             ("Live Feed", "text=Live Intelligence Stream"),
             ("Agent Status Bar", "text=MULTI-AGENT MESH"),
             ("Momentum Graph", "text=LIVE MATCH MOMENTUM CURVE"),

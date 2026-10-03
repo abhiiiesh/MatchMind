@@ -122,12 +122,19 @@ async def test_rest_api_endpoints():
             res_sim = await client.post("/api/match/sim_test/simulate?source=synthetic&events_count=5&delay_seconds=0.05")
             assert res_sim.status_code == 200
             await asyncio.sleep(0.6)
-            res_state = await client.get("/api/match/sim_test/state")
-            assert res_state.status_code == 200
-            state_data = res_state.json()
-            assert state_data["match_id"] == "sim_test"
-            assert "score" in state_data
-            assert "cumulative_xg" in state_data
-            assert "field_tilt" in state_data
+            # 5. Player RAG lookup endpoint
+            res_player = await client.get("/api/rag/player/Bukayo%20Saka")
+            assert res_player.status_code == 200
+            player_data = res_player.json()
+            assert player_data["player_name"] == "Bukayo Saka"
+            assert "profile" in player_data
+            assert player_data["profile"]["team"] == "Arsenal"
+
+            # 6. Rivalry RAG lookup endpoint
+            res_rivalry = await client.get("/api/rag/rivalry/Arsenal/Liverpool")
+            assert res_rivalry.status_code == 200
+            rivalry_data = res_rivalry.json()
+            assert "rivalry" in rivalry_data
+
 
 

@@ -108,6 +108,30 @@ async def get_match_state(match_id: str):
     return state.model_dump()
 
 
+@app.get("/api/rag/player/{player_name}")
+async def get_player_profile(player_name: str):
+    """Retrieves deep historical profile and career milestones for a player."""
+    context_agent = orchestrator.agents.get("context_agent")
+    if not context_agent or not hasattr(context_agent, "rag_engine"):
+        return JSONResponse(status_code=503, content={"error": "ContextAgent not ready"})
+    profile = context_agent.rag_engine.find_player(player_name)
+    if not profile:
+        return JSONResponse(status_code=404, content={"error": f"Player '{player_name}' not found in historical database"})
+    return {"player_name": player_name, "profile": profile}
+
+
+@app.get("/api/rag/rivalry/{home_team}/{away_team}")
+async def get_rivalry_profile(home_team: str, away_team: str):
+    """Retrieves head-to-head historical rivalry stats and narratives."""
+    context_agent = orchestrator.agents.get("context_agent")
+    if not context_agent or not hasattr(context_agent, "rag_engine"):
+        return JSONResponse(status_code=503, content={"error": "ContextAgent not ready"})
+    rivalry = context_agent.rag_engine.find_rivalry(home_team, away_team)
+    if not rivalry:
+        return JSONResponse(status_code=404, content={"error": f"No rivalry record found for {home_team} vs {away_team}"})
+    return {"home_team": home_team, "away_team": away_team, "rivalry": rivalry}
+
+
 @app.post("/api/match/{match_id}/simulate")
 async def start_simulation(
     match_id: str,

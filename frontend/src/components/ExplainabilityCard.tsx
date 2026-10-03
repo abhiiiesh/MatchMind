@@ -2,9 +2,15 @@ import type { NarrativeOutput } from "../types";
 
 interface ExplainabilityProps {
   narrative: NarrativeOutput | null;
+  onSelectPlayer?: (playerName: string) => void;
+  currentEventPlayerName?: string;
 }
 
-export const ExplainabilityCard: React.FC<ExplainabilityProps> = ({ narrative }) => {
+export const ExplainabilityCard: React.FC<ExplainabilityProps> = ({
+  narrative,
+  onSelectPlayer,
+  currentEventPlayerName,
+}) => {
   if (!narrative) {
     return (
       <div className="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 text-center text-sm text-slate-500 italic">
@@ -46,10 +52,21 @@ export const ExplainabilityCard: React.FC<ExplainabilityProps> = ({ narrative })
       </p>
 
       {/* Leverage & Timing Footer */}
-      <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-        <span className="font-medium">
-          Match Minute: <b className="text-slate-200">{narrative.minute}'</b>
-        </span>
+      <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400 flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <span className="font-medium">
+            Match Minute: <b className="text-slate-200">{narrative.minute}'</b>
+          </span>
+          {currentEventPlayerName && onSelectPlayer && (
+            <button
+              onClick={() => onSelectPlayer(currentEventPlayerName)}
+              className="text-[10px] bg-indigo-500/10 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded font-semibold transition-colors"
+              title={`Focus analysis on ${currentEventPlayerName}`}
+            >
+              👤 Focus {currentEventPlayerName}
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-1">
           <span>Emotional Leverage:</span>
           <span

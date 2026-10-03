@@ -1,52 +1,98 @@
 import React, { useState, useEffect, useRef } from "react";
-import type { NarrativeOutput, PersonaType } from "../types";
+import type { LanguageCode, NarrativeOutput, PersonaType } from "../types";
 import { Volume2, VolumeX, Play, Pause, Radio, Headphones } from "lucide-react";
 
 interface AudioCommentaryBarProps {
   latestNarrative: NarrativeOutput | null;
   activePersona: PersonaType;
+  activeLanguage?: LanguageCode;
 }
 
 export const AudioCommentaryBar: React.FC<AudioCommentaryBarProps> = ({
   latestNarrative,
   activePersona,
+  activeLanguage = "en",
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [useAccessibilityAudio, setUseAccessibilityAudio] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
   const lastSpokenIdRef = useRef<string | null>(null);
+
+  // Load voices reliably across Chromium and WebKit
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    const updateVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        setAvailableVoices(voices);
+      }
+    };
+
+    updateVoices();
+    window.speechSynthesis.onvoiceschanged = updateVoices;
+
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
 
   // Read aloud commentary when new verified message arrives
   useEffect(() => {
     if (!isPlaying || isMuted || !latestNarrative || !window.speechSynthesis) return;
 
-    if (latestNarrative.narrative_id === lastSpokenIdRef.current) return;
-    lastSpokenIdRef.current = latestNarrative.narrative_id;
+    const speechKey = `${latestNarrative.narrative_id}-${activePersona}-${activeLanguage}-${useAccessibilityAudio}`;
+    if (speechKey === lastSpokenIdRef.current) return;
+    lastSpokenIdRef.current = speechKey;
 
-    // Pick commentary text
-    const textToSpeak = useAccessibilityAudio
-      ? latestNarrative.commentary_by_persona?.accessibility_audio ||
-        latestNarrative.why_it_matters_explanation
-      : latestNarrative.commentary_by_persona?.[activePersona] ||
+    // Pick commentary text (multilingual if selected)
+    let textToSpeak = "";
+    if (activeLanguage !== "en" && latestNarrative.translations?.[activeLanguage]) {
+      textToSpeak = latestNarrative.translations[activeLanguage];
+    } else if (useAccessibilityAudio) {
+      textToSpeak =
+        latestNarrative.commentary_by_persona?.accessibility_audio ||
         latestNarrative.why_it_matters_explanation;
+    } else {
+      textToSpeak =
+        latestNarrative.commentary_by_persona?.[activePersona] ||
+        latestNarrative.why_it_matters_explanation;
+    }
 
     if (!textToSpeak) return;
 
     // Cancel current speech and speak new line
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    utterance.rate = 1.05;
-    utterance.pitch = useAccessibilityAudio ? 0.95 : 1.0;
 
-    // Choose English voice
-    const voices = window.speechSynthesis.getVoices();
-    const englishVoice = voices.find((v) => v.lang.startsWith("en"));
-    if (englishVoice) {
-      utterance.voice = englishVoice;
+    // Dynamic pitch/rate based on emotional leverage
+    const isHighDrama = (latestNarrative.leverage_index ?? 1.0) >= 3.0;
+    utterance.rate = isHighDrama ? 1.15 : useAccessibilityAudio ? 1.0 : 1.05;
+    utterance.pitch = isHighDrama ? 1.08 : useAccessibilityAudio ? 0.95 : 1.0;
+
+    // Match appropriate voice for language
+    const voices = availableVoices.length > 0 ? availableVoices : window.speechSynthesis.getVoices();
+    const matchedVoice =
+      voices.find((v) => v.lang.toLowerCase().startsWith(activeLanguage.toLowerCase())) ||
+      voices.find((v) => v.lang.startsWith("en"));
+
+    if (matchedVoice) {
+      utterance.voice = matchedVoice;
     }
 
     window.speechSynthesis.speak(utterance);
-  }, [latestNarrative, isPlaying, isMuted, activePersona, useAccessibilityAudio]);
+  }, [
+    latestNarrative,
+    isPlaying,
+    isMuted,
+    activePersona,
+    activeLanguage,
+    useAccessibilityAudio,
+    availableVoices,
+  ]);
 
   const togglePlay = () => {
     if (isPlaying) {
@@ -55,7 +101,7 @@ export const AudioCommentaryBar: React.FC<AudioCommentaryBarProps> = ({
     } else {
       setIsPlaying(true);
       if (latestNarrative) {
-        lastSpokenIdRef.current = null; // force speech on next trigger
+        lastSpokenIdRef.current = null; // force speech on play
       }
     }
   };
