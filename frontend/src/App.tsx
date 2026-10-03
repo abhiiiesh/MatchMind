@@ -5,7 +5,11 @@ import { MetricsPanel } from "./components/MetricsPanel";
 import { ExplainabilityCard } from "./components/ExplainabilityCard";
 import { LiveFeed } from "./components/LiveFeed";
 import { AgentStatusBar } from "./components/AgentStatusBar";
+import { MomentumGraph } from "./components/MomentumGraph";
+import { PlayerFocusCard } from "./components/PlayerFocusCard";
+import { AudioCommentaryBar } from "./components/AudioCommentaryBar";
 import type {
+
   AgentHealth,
   LanguageCode,
   MatchEvent,
@@ -111,7 +115,7 @@ export const App: React.FC = () => {
 
       {/* Main Grid View */}
       <main className="flex-1 p-4 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Left Column (Pitch & Metrics): 7 Cols on desktop */}
+        {/* Left Column (Pitch, Focus, Momentum & Metrics): 7 Cols on desktop */}
         <div className="lg:col-span-7 flex flex-col gap-4">
           <PitchVisualization
             currentEvent={currentEvent}
@@ -120,11 +124,30 @@ export const App: React.FC = () => {
             focusedPlayer={focusedPlayer}
             onSelectPlayer={setFocusedPlayer}
           />
+          {focusedPlayer && (
+            <PlayerFocusCard
+              focusedPlayerName={focusedPlayer}
+              currentEvent={currentEvent}
+              onClearFocus={() => setFocusedPlayer(null)}
+              homeTeamName={metrics?.home_team ?? "Arsenal"}
+              awayTeamName={metrics?.away_team ?? "Liverpool"}
+              activePersona={activePersona}
+            />
+          )}
+          <MomentumGraph
+            metrics={metrics}
+            homeTeamName={metrics?.home_team ?? "Arsenal"}
+            awayTeamName={metrics?.away_team ?? "Liverpool"}
+          />
           <MetricsPanel metrics={metrics} />
         </div>
 
-        {/* Right Column (Explainability & Live Feed): 5 Cols on desktop */}
+        {/* Right Column (Audio, Explainability & Live Feed): 5 Cols on desktop */}
         <div className="lg:col-span-5 flex flex-col gap-4">
+          <AudioCommentaryBar
+            latestNarrative={latestNarrative}
+            activePersona={activePersona}
+          />
           <ExplainabilityCard narrative={latestNarrative} />
           <div className="flex-1 min-h-[360px]">
             <LiveFeed
@@ -135,6 +158,7 @@ export const App: React.FC = () => {
           </div>
         </div>
       </main>
+
 
       {/* Persistent Multi-Agent Status Bar */}
       <AgentStatusBar agents={agentList} />

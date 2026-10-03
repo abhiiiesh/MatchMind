@@ -16,6 +16,7 @@ from matchmind.constants import (
 from matchmind.metrics.expected_goals import ExpectedGoalsModel
 from matchmind.metrics.expected_threat import ExpectedThreatGrid
 from matchmind.metrics.pressing import PressingEngine
+from matchmind.metrics.momentum import MomentumEngine
 from matchmind.models import AgentMessage, MatchEvent, MetricState
 
 
@@ -31,14 +32,17 @@ class MetricsAgent(BaseAgent):
         self.xg_model = ExpectedGoalsModel()
         self.xt_grid = ExpectedThreatGrid()
         self.pressing_engine = PressingEngine(window_minutes=5)
+        self.momentum_engine = MomentumEngine(window_minutes=5)
 
         # Rolling internal state
         self.home_team_name: Optional[str] = None
         self.away_team_name: Optional[str] = None
         self.score = {"home": 0, "away": 0}
         self.cumulative_xg = {"home": 0.0, "away": 0.0}
+        self.cumulative_xt = {"home": 0.0, "away": 0.0}
         self.final_third_passes = {"home": 0, "away": 0}
         self.pass_counts = {"home": 0, "away": 0}
+
 
     def _determine_teams(self, event: MatchEvent) -> None:
         """Establish home vs away identities dynamically."""
@@ -105,6 +109,8 @@ class MetricsAgent(BaseAgent):
                 action_xt = self.xt_grid.value_action(
                     event.start_x, event.start_y, event.end_x, event.end_y
                 )
+                if action_xt and action_xt > 0:
+                    self.cumulative_xt[team_key] = round(self.cumulative_xt[team_key] + action_xt, 3)
                 if event.start_x >= 80.0:  # Attacking third
                     self.final_third_passes[team_key] += 1
 
@@ -152,6 +158,21 @@ class MetricsAgent(BaseAgent):
         elif field_tilt_val <= (100.0 - FIELD_TILT_DOMINANT):
             momentum_dir = "away_dominant"
 
+        # Record momentum step and compute timeline
+        momentum_entry = self.momentum_engine.record_step(
+            minute=event.minute,
+            field_tilt=field_tilt_val,
+            home_xg=self.cumulative_xg["home"],
+            away_xg=self.cumulative_xg["away"],
+            home_xt_added=self.cumulative_xt["home"],
+            away_xt_added=self.cumulative_xt["away"],
+            home_ppda=home_ppda,
+            away_ppda=away_ppda,
+            event_type=event.event_type,
+        )
+        momentum_val = momentum_entry["value"]
+        is_momentum_shift = momentum_entry["is_shift"]
+
         metric_state = MetricState(
             match_id=event.match_id,
             minute=event.minute,
@@ -166,11 +187,14 @@ class MetricsAgent(BaseAgent):
                 "away": round((self.pass_counts["away"] / max(1, sum(self.pass_counts.values()))) * 100, 1),
             },
             momentum_direction=momentum_dir,
-            momentum_shift_detected=(current_leverage >= LEVERAGE_INDEX_HIGH),
+            momentum_value=momentum_val,
+            momentum_shift_detected=is_momentum_shift or (current_leverage >= LEVERAGE_INDEX_HIGH),
+            momentum_timeline=self.momentum_engine.get_timeline(max_points=40),
             current_leverage_index=current_leverage,
             current_action_xg=action_xg,
             current_action_xt=action_xt,
         )
+
 
         out_msg = AgentMessage(
             source_agent=self.agent_id,

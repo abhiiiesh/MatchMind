@@ -42,11 +42,14 @@ export interface MetricState {
   field_tilt: number;
   possession_pct: { home: number; away: number };
   momentum_direction: string;
+  momentum_value?: number;
   momentum_shift_detected: boolean;
+  momentum_timeline?: Array<{ minute: number; value: number; is_shift: boolean; event_type: string }>;
   current_leverage_index: number;
   current_action_xg?: number;
   current_action_xt?: number;
 }
+
 
 export interface NarrativeOutput {
   narrative_id: string;

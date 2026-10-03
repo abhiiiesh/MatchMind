@@ -71,6 +71,10 @@ FIELD_TILT_BALANCED = 50.0
 LEVERAGE_INDEX_HIGH = 3.0
 LEVERAGE_INDEX_EXTREME = 6.0  # 90th+ min 1-goal differential, penalties, red cards
 
+# Momentum Shift Threshold (Change required to signal significant tactical shift)
+MOMENTUM_SHIFT_THRESHOLD = 30.0
+
+
 # =====================================================================
 # Audience Personas & Target Languages
 # =====================================================================

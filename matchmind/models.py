@@ -65,7 +65,9 @@ class MetricState(BaseModel):
 
     # Tactical & Momentum indicators
     momentum_direction: str = "balanced"  # "home_dominant", "away_dominant", "balanced"
+    momentum_value: float = 0.0  # -100 (Away dominant) to +100 (Home dominant)
     momentum_shift_detected: bool = False
+    momentum_timeline: List[Dict[str, Any]] = Field(default_factory=list)
     current_leverage_index: float = 1.0  # 1.0 = average; > 3.0 = critical dramatic moment
     tactical_shape_home: str = "4-3-3"
     tactical_shape_away: str = "4-2-3-1"
@@ -74,6 +76,7 @@ class MetricState(BaseModel):
     current_action_xg: Optional[float] = None
     current_action_xt: Optional[float] = None
     current_pass_difficulty: Optional[float] = None
+
 
 
 class NarrativeOutput(BaseModel):
