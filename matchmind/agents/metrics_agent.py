@@ -89,16 +89,25 @@ class MetricsAgent(BaseAgent):
             if event.outcome == "Goal":
                 is_goal = True
                 self.score[team_key] += 1
+        elif event.event_type in [EventType.GOAL, "Goal"]:
+            is_goal = True
+            self.score[team_key] += 1
 
         # 2. Pass / Progression Analysis (xT & Field Tilt)
         if event.event_type == EventType.PASS:
             self.pass_counts[team_key] += 1
-            if event.start_x and event.start_y and event.end_x and event.end_y:
+            if (
+                event.start_x is not None
+                and event.start_y is not None
+                and event.end_x is not None
+                and event.end_y is not None
+            ):
                 action_xt = self.xt_grid.value_action(
                     event.start_x, event.start_y, event.end_x, event.end_y
                 )
                 if event.start_x >= 80.0:  # Attacking third
                     self.final_third_passes[team_key] += 1
+
 
         # 3. Pressing & PPDA Registration
         is_defensive = event.event_type in [

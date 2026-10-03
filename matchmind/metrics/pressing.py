@@ -36,7 +36,8 @@ class PressingEngine:
         PPDA = Opponent Passes in Pressing Zone / Team Defensive Actions in Pressing Zone
         """
         min_cutoff = max(0, current_minute - self.window_minutes)
-        window_events = [e for e in self.history if e["minute"] >= min_cutoff]
+        window_events = [e for e in self.history if min_cutoff <= e["minute"] <= current_minute]
+
 
         opponent_passes = sum(
             1 for e in window_events if e["team"] == opponent_name and e["is_opponent_pass"]

@@ -6,9 +6,11 @@ import structlog
 from openai import AsyncAzureOpenAI
 
 from matchmind.config import settings
+from matchmind.constants import FanPersona
 from matchmind.narrative.local_fallback import LocalNarrativeEngine
 
 logger = structlog.get_logger(__name__)
+
 
 
 class AzureOpenAIClient:
@@ -122,7 +124,14 @@ class AzureOpenAIClient:
         action_xg = ms.get("current_action_xg")
         action_xt = ms.get("current_action_xt")
         field_tilt = ms.get("field_tilt", 50.0)
-        ppda = ms.get("rolling_ppda", {}).get("away", 11.5)
+        # Determine defending team PPDA
+        home_team = ms.get("home_team")
+        rolling_ppda = ms.get("rolling_ppda", {})
+        if team_name == home_team:
+            ppda = rolling_ppda.get("away", 11.5)
+        else:
+            ppda = rolling_ppda.get("home", 11.5)
+
         leverage = ms.get("current_leverage_index", 1.0)
         outcome = evt.get("outcome", "Success")
 
@@ -140,7 +149,7 @@ class AzureOpenAIClient:
         )
 
         analyst = LocalNarrativeEngine.generate_persona_commentary(
-            persona=settings.FanPersona.TACTICAL_ANALYST if hasattr(settings, "FanPersona") else "tactical_analyst",
+            persona=FanPersona.TACTICAL_ANALYST,
             event_type=event_type,
             team_name=team_name,
             player_name=player_name,
@@ -151,10 +160,11 @@ class AzureOpenAIClient:
             ppda=ppda,
             why_it_matters=why_matters,
             outcome=outcome,
+            action_xt=action_xt,
         )
 
         casual = LocalNarrativeEngine.generate_persona_commentary(
-            persona="casual_fan",
+            persona=FanPersona.CASUAL_FAN,
             event_type=event_type,
             team_name=team_name,
             player_name=player_name,
@@ -165,10 +175,11 @@ class AzureOpenAIClient:
             ppda=ppda,
             why_it_matters=why_matters,
             outcome=outcome,
+            action_xt=action_xt,
         )
 
         commentator = LocalNarrativeEngine.generate_persona_commentary(
-            persona="broadcast_commentator",
+            persona=FanPersona.BROADCAST_COMMENTATOR,
             event_type=event_type,
             team_name=team_name,
             player_name=player_name,
@@ -179,6 +190,22 @@ class AzureOpenAIClient:
             ppda=ppda,
             why_it_matters=why_matters,
             outcome=outcome,
+            action_xt=action_xt,
+        )
+
+        accessibility = LocalNarrativeEngine.generate_persona_commentary(
+            persona=FanPersona.ACCESSIBILITY_AUDIO,
+            event_type=event_type,
+            team_name=team_name,
+            player_name=player_name,
+            minute=minute,
+            score=score,
+            action_xg=action_xg,
+            field_tilt=field_tilt,
+            ppda=ppda,
+            why_it_matters=why_matters,
+            outcome=outcome,
+            action_xt=action_xt,
         )
 
         return {
@@ -187,4 +214,6 @@ class AzureOpenAIClient:
             "analyst_commentary": analyst,
             "casual_commentary": casual,
             "commentator_commentary": commentator,
+            "accessibility_commentary": accessibility,
         }
+

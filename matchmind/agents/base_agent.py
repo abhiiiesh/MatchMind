@@ -2,7 +2,7 @@
 
 import abc
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 import structlog
 
@@ -27,7 +27,7 @@ class BaseAgent(abc.ABC):
         self.total_processing_time_ms = 0.0
         self.current_task = "Idle"
         self.status = "healthy"
-        self.last_active = datetime.utcnow()
+        self.last_active = datetime.now(timezone.utc)
         self.log = logger.bind(agent_id=self.agent_id, role=self.role_name)
 
     def can_handle(self, message: AgentMessage) -> bool:
@@ -47,7 +47,8 @@ class BaseAgent(abc.ABC):
         start_time = time.perf_counter()
         self.current_task = f"Processing {message.message_type} (#{message.event_index})"
         self.status = "processing"
-        self.last_active = datetime.utcnow()
+        self.last_active = datetime.now(timezone.utc)
+
 
         try:
             results = await self.process(message)

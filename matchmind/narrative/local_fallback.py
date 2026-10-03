@@ -71,7 +71,7 @@ class LocalNarrativeEngine:
                 )
             else:
                 return (
-                    f"Defensive containment by {player_name}. Reseting the defensive shape to restrict half-space penetration."
+                    f"Defensive containment by {player_name}. Resetting the defensive shape to restrict half-space penetration."
                 )
 
         return (
@@ -92,14 +92,24 @@ class LocalNarrativeEngine:
         ppda: float,
         why_it_matters: str,
         outcome: str = "Success",
+        action_xt: Optional[float] = None,
     ) -> str:
         """Renders persona-specific commentary."""
-        score_str = f"{score.get('home', 0)}-{score.get('away', 0)}"
+        score_dict = score or {"home": 0, "away": 0}
+        score_str = f"{score_dict.get('home', 0)}-{score_dict.get('away', 0)}"
+
+        # Coerce string to FanPersona enum if necessary
+        if isinstance(persona, str):
+            try:
+                persona = FanPersona(persona)
+            except ValueError:
+                pass
 
         if persona == FanPersona.TACTICAL_ANALYST:
-            xg_txt = f" (xG {action_xg:.2f})" if action_xg else ""
+            xg_txt = f" (xG {action_xg:.2f})" if action_xg is not None else ""
+            xt_txt = f" (xT +{action_xt:.3f})" if action_xt is not None and action_xt > 0 else ""
             return (
-                f"[TACTICAL ANALYSIS | {minute}'] {player_name} ({team_name}) executes {event_type}{xg_txt}. "
+                f"[TACTICAL ANALYSIS | {minute}'] {player_name} ({team_name}) executes {event_type}{xg_txt}{xt_txt}. "
                 f"Field Tilt at {field_tilt:.1f}% with defending PPDA sitting at {ppda:.1f}. "
                 f"Context: {why_it_matters}"
             )
@@ -115,7 +125,7 @@ class LocalNarrativeEngine:
                     f"😮 Big chance for {player_name}! The crowd is on their feet! "
                     f"Can you believe how close that was at {minute}'?!"
                 )
-            elif event_type == "Pass" and (action_xg or 0) > 0.2:
+            elif event_type == "Pass" and ((action_xt or 0.0) > 0.04 or (action_xg or 0.0) > 0.2):
                 return f"👀 Brilliant play by {player_name}! Beautiful pass that opens up the whole defense!"
             else:
                 return f"⚡ {player_name} with great movement for {team_name} in the {minute}th minute."
@@ -144,3 +154,4 @@ class LocalNarrativeEngine:
             )
 
         return f"{minute}' {player_name} with the {event_type} for {team_name}."
+

@@ -10,8 +10,9 @@ import structlog
 
 from matchmind.agents.base_agent import BaseAgent
 from matchmind.config import settings
-from matchmind.constants import SUPPORTED_LANGUAGES
+from matchmind.constants import SUPPORTED_LANGUAGES, FanPersona
 from matchmind.models import AgentMessage
+
 
 logger = structlog.get_logger(__name__)
 
@@ -125,7 +126,16 @@ class TranslatorAgent(BaseAgent):
         payload = message.payload
         narrative_dict = payload.get("narrative", {})
         commentary_map = narrative_dict.get("commentary_by_persona", {})
-        primary_text = commentary_map.get("casual_fan") or commentary_map.get("broadcast_commentator") or ""
+        primary_text = (
+            commentary_map.get(FanPersona.CASUAL_FAN)
+            or commentary_map.get("casual_fan")
+            or commentary_map.get(FanPersona.BROADCAST_COMMENTATOR)
+            or commentary_map.get("broadcast_commentator")
+            or commentary_map.get(FanPersona.TACTICAL_ANALYST)
+            or commentary_map.get("tactical_analyst")
+            or ""
+        )
+
 
         translations: Dict[str, str] = {"en": primary_text}
 

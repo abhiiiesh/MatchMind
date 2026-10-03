@@ -1,8 +1,8 @@
 """Core Pydantic data models for MatchMind multi-agent communication and telemetry."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 from pydantic import BaseModel, Field
 
 from matchmind.constants import FanPersona
@@ -53,9 +53,9 @@ class MatchEvent(BaseModel):
 class MetricState(BaseModel):
     """Rolling match metrics state updated by the Metrics Agent."""
     match_id: str
-    minute: int
-    home_team: str
-    away_team: str
+    minute: int = 0
+    home_team: str = "Home"
+    away_team: str = "Away"
     score: Dict[str, int] = Field(default_factory=lambda: {"home": 0, "away": 0})
 
     cumulative_xg: Dict[str, float] = Field(default_factory=lambda: {"home": 0.0, "away": 0.0})
@@ -82,7 +82,7 @@ class NarrativeOutput(BaseModel):
     match_id: str
     event_index: int
     minute: int
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     # Narrative metadata
     game_state_arc: str = "Tense Build-Up"
@@ -96,14 +96,14 @@ class NarrativeOutput(BaseModel):
     translations: Dict[str, str] = Field(default_factory=dict)
 
     # Compliance & verification
-    verified_by_factcheck: bool = True
+    verified_by_factcheck: bool = False
     factcheck_notes: Optional[str] = None
 
 
 class AgentMessage(BaseModel):
     """Standardized message envelope for the MatchMind message bus."""
     message_id: str = Field(default_factory=lambda: str(uuid4()))
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     source_agent: str
     target_agents: List[str] = Field(default_factory=lambda: ["*"])
     match_id: str
@@ -119,8 +119,9 @@ class AgentHealth(BaseModel):
     agent_id: str
     role_name: str
     status: str = "healthy"  # "healthy", "processing", "degraded", "error"
-    last_active: datetime = Field(default_factory=datetime.utcnow)
+    last_active: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     processed_count: int = 0
     error_count: int = 0
     average_latency_ms: float = 0.0
     current_task: Optional[str] = "Idle"
+

@@ -52,15 +52,25 @@ class IngestionAgent(BaseAgent):
         if event.end_x is not None and event.end_y is not None:
             meters_end = self._statsbomb_to_meters(event.end_x, event.end_y)
 
+        # Check penalty box entry (transitioning into StatsBomb 18-yard box: x >= 102, 18 <= y <= 62)
+        is_box_entry = False
+        if event.end_x is not None and event.end_y is not None:
+            in_box_end = event.end_x >= 102.0 and 18.0 <= event.end_y <= 62.0
+            in_box_start = (event.start_x or 0.0) >= 102.0 and 18.0 <= (event.start_y or 0.0) <= 62.0
+            is_box_entry = in_box_end and not in_box_start
+        elif event.start_x is not None and event.start_y is not None:
+            is_box_entry = event.start_x >= 102.0 and 18.0 <= event.start_y <= 62.0
+
         normalized_payload = {
             "event": event.model_dump(),
             "coordinates_meters": {
                 "start": meters_start,
                 "end": meters_end,
             },
-            "is_attacking_third": (event.start_x or 0) >= 80.0,
-            "is_box_entry": (event.start_x or 0) >= 102.0 and 18.0 <= (event.start_y or 0) <= 62.0,
+            "is_attacking_third": (event.start_x or 0.0) >= 80.0,
+            "is_box_entry": is_box_entry,
         }
+
 
         out_message = AgentMessage(
             source_agent=self.agent_id,

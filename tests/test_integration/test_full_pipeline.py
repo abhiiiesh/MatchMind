@@ -113,3 +113,16 @@ async def test_rest_api_endpoints():
             assert res_overlay.status_code == 200
             assert "MatchMind Broadcast Overlay" in res_overlay.text
 
+            # 4. Trigger simulation and verify match state replication
+            res_sim = await client.post("/api/match/sim_test/simulate?source=synthetic&events_count=5&delay_seconds=0.05")
+            assert res_sim.status_code == 200
+            await asyncio.sleep(0.6)
+            res_state = await client.get("/api/match/sim_test/state")
+            assert res_state.status_code == 200
+            state_data = res_state.json()
+            assert state_data["match_id"] == "sim_test"
+            assert "score" in state_data
+            assert "cumulative_xg" in state_data
+            assert "field_tilt" in state_data
+
+

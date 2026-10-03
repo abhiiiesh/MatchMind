@@ -1,12 +1,13 @@
 """MatchMind Multi-Agent Orchestrator and Message Bus."""
 
 import asyncio
-from datetime import datetime
-from typing import Callable, Dict, List, Optional
+from datetime import datetime, timezone
+from typing import Any, Callable, Dict, List, Optional
 import structlog
 
 from matchmind.agents.base_agent import BaseAgent
 from matchmind.models import AgentHealth, AgentMessage, MetricState
+
 
 logger = structlog.get_logger(__name__)
 
@@ -85,6 +86,17 @@ class AgentOrchestrator:
             except asyncio.CancelledError:
                 break
 
+            # Automatically replicate and maintain shared match state
+            if message.payload and "metric_state" in message.payload:
+                ms_data = message.payload["metric_state"]
+                try:
+                    if isinstance(ms_data, MetricState):
+                        self.match_states[message.match_id] = ms_data
+                    elif isinstance(ms_data, dict):
+                        self.match_states[message.match_id] = MetricState(**ms_data)
+                except Exception as exc:
+                    logger.debug("Failed updating match state", match_id=message.match_id, error=str(exc))
+
             # Find matching agents
             active_agents = [
                 agent for agent in self.agents.values() if agent.can_handle(message)
@@ -119,9 +131,10 @@ class AgentOrchestrator:
                         "agent_id": target_agent.agent_id,
                         "message_id": in_msg.message_id,
                         "error": str(err),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                     })
 
             tasks = [run_agent(agent, message) for agent in active_agents]
             await asyncio.gather(*tasks, return_exceptions=True)
             self.message_queue.task_done()
+

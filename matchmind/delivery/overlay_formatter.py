@@ -184,3 +184,8 @@ class BroadcastOverlayFormatter:
   </script>
 </body>
 </html>"""
+
+
+# Alias for backward compatibility
+OverlayFormatter = BroadcastOverlayFormatter
+

@@ -26,20 +26,37 @@ class FactCheckerAgent(BaseAgent):
 
     def _verify_scoreline(self, text: str, ground_truth_score: Dict[str, int]) -> Tuple[bool, str]:
         """Detects if commentary asserts an incorrect scoreline."""
-        # Find score patterns like "2-1", "0 - 0", "3:2"
-        score_patterns = re.findall(r"\b(\d+)\s*[-:]\s*(\d+)\b", text)
+        # 1. Strip tactical formations (e.g., 4-3-3, 4-2-3-1, 3-5-2)
+        clean_text = re.sub(r"\b\d+-\d+-\d+(?:-\d+)?\b", "", text)
+        # 2. Strip distance ranges (e.g., 6-8 meters, 10-12 yards)
+        clean_text = re.sub(r"\b\d+\s*[-–]\s*\d+\s*(?:meters?|yards?|m|yd)\b", "", clean_text, flags=re.IGNORECASE)
+        # 3. Strip timestamps / match clock (e.g., 12:30, 90:00)
+        clean_text = re.sub(r"\b\d{1,2}:\d{2}\b", "", clean_text)
+
+        # Find explicit score mentions
+        score_patterns = re.findall(
+            r"(?:score(?:line)?(?:\s+stands\s+at|\s+shifts\s+to|\s+is)?|makes\s+it|leads?\s+)\s*(\d+)\s*[-–:]\s*(\d+)",
+            clean_text,
+            flags=re.IGNORECASE,
+        )
+
+        # Fallback to general \b\d+-\d+\b only if explicit pattern wasn't matched
+        if not score_patterns:
+            score_patterns = re.findall(r"\b(\d+)\s*[-–]\s*(\d+)\b", clean_text)
+
         actual_home = ground_truth_score.get("home", 0)
         actual_away = ground_truth_score.get("away", 0)
 
         for match in score_patterns:
             h, a = int(match[0]), int(match[1])
-            # Check if this matches actual score or reverse
-            if (h == actual_home and a == actual_away) or (h == actual_away and a == actual_home):
+            # Direct match
+            if h == actual_home and a == actual_away:
                 continue
             # If a completely different score is claimed:
             return False, f"Scoreline hallucination detected: Text claims {h}-{a}, ground truth is {actual_home}-{actual_away}"
 
         return True, "Scoreline verified"
+
 
     def _verify_goal_outcome(self, commentary_map: Dict[str, str], outcome: str) -> Tuple[bool, str]:
         """Ensures non-goal events are not celebrated as goals."""

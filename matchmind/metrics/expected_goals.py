@@ -31,13 +31,14 @@ class ExpectedGoalsModel:
         precomputed_xg: Optional[float] = None,
     ) -> float:
         """Compute the xG probability [0.0, 1.0] for a shot."""
-        if precomputed_xg is not None and precomputed_xg > 0.0:
+        if precomputed_xg is not None and precomputed_xg >= 0.0:
             return round(min(0.99, max(0.01, precomputed_xg)), 3)
 
         # Distance to center of target goal (120, 40 in StatsBomb yards)
-        dx = STATSBOMB_GOAL_LINE_X - x
+        dx = max(0.1, STATSBOMB_GOAL_LINE_X - x)
         dy = STATSBOMB_GOAL_CENTER_Y - y
         distance = math.sqrt(dx * dx + dy * dy)
+
 
         if distance <= 0.5:
             return 0.95

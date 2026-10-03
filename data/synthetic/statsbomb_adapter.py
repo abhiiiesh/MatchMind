@@ -126,3 +126,8 @@ class StatsBombStreamer:
         """Returns the full parsed sequence of match events."""
         raw_events = self.fetch_or_load_match()
         return [self.parse_event(r) for r in raw_events]
+
+
+# Alias for backward compatibility with implementation plan
+StatsBombAdapter = StatsBombStreamer
+

@@ -16,8 +16,9 @@ class StoryArcClassifier:
     @staticmethod
     def classify_arc(metric_state: MetricState) -> str:
         minute = metric_state.minute
-        score_diff = metric_state.score["home"] - metric_state.score["away"]
+        score_diff = metric_state.score.get("home", 0) - metric_state.score.get("away", 0)
         field_tilt = metric_state.field_tilt
+
         leverage = metric_state.current_leverage_index
         home_ppda = metric_state.rolling_ppda.get("home", 11.5)
         away_ppda = metric_state.rolling_ppda.get("away", 11.5)

@@ -52,3 +52,8 @@ class ExpectedThreatGrid:
 
         delta_xt = end_val - start_val
         return round(float(delta_xt), 4)
+
+
+# Alias for backward compatibility
+ExpectedThreatModel = ExpectedThreatGrid
+

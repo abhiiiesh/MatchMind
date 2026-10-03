@@ -33,8 +33,10 @@ class PersonaAgent(BaseAgent):
 
         # Build accessibility description
         minute = message.match_minute
-        player_name = event.get("player", {}).get("name", "Player") if event.get("player") else "Team"
-        team_name = event.get("team", {}).get("name", "Team")
+        player_obj = event.get("player") or {}
+        player_name = player_obj.get("name", "Player") if isinstance(player_obj, dict) else "Player"
+        team_obj = event.get("team") or {}
+        team_name = team_obj.get("name", "Team") if isinstance(team_obj, dict) else "Team"
         score = metric_dict.get("score", {"home": 0, "away": 0})
         score_str = f"{score.get('home', 0)}-{score.get('away', 0)}"
 
@@ -58,8 +60,9 @@ class PersonaAgent(BaseAgent):
             leverage_index=leverage,
             why_it_matters_explanation=why_it_matters,
             commentary_by_persona=commentary_map,
-            verified_by_factcheck=True,
+            verified_by_factcheck=False,
         )
+
 
         out_message = AgentMessage(
             source_agent=self.agent_id,

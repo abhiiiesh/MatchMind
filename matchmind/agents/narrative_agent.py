@@ -26,11 +26,21 @@ class NarrativeAgent(BaseAgent):
     async def process(self, message: AgentMessage) -> List[AgentMessage]:
         payload = message.payload
         metric_dict = payload.get("metric_state", {})
-        metric_state = MetricState(**metric_dict)
+        if isinstance(metric_dict, MetricState):
+            metric_state = metric_dict
+        else:
+            if "match_id" not in metric_dict:
+                metric_dict["match_id"] = message.match_id
+            metric_state = MetricState(**metric_dict)
         event = payload.get("event", {})
 
         # Classify the global narrative arc
         story_arc = self.arc_classifier.classify_arc(metric_state)
+
+        team_obj = event.get("team") or {}
+        team_name = team_obj.get("name") if isinstance(team_obj, dict) else str(team_obj)
+        player_obj = event.get("player") or {}
+        player_name = player_obj.get("name") if isinstance(player_obj, dict) else None
 
         # Prepare context payload for LLM / fallback engine
         match_context = {
@@ -45,14 +55,15 @@ class NarrativeAgent(BaseAgent):
             "story_arc": story_arc,
             "event": {
                 "type": event.get("event_type"),
-                "team": event.get("team", {}).get("name"),
-                "player": event.get("player", {}).get("name") if event.get("player") else None,
+                "team": team_name,
+                "player": player_name,
                 "outcome": event.get("outcome"),
                 "under_pressure": event.get("under_pressure"),
                 "action_xg": metric_state.current_action_xg,
                 "action_xt": metric_state.current_action_xt,
             },
         }
+
 
         # Generate structured explanation and draft commentary
         narrative_result = await self.azure_client.generate_structured_narrative(

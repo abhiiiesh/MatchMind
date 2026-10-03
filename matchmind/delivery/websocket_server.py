@@ -58,3 +58,6 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+
+# Alias for backward compatibility
+WebSocketManager = ConnectionManager
