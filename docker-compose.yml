@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  matchmind:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: matchmind-engine
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_NAME=MatchMind
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_COSMOS_ENDPOINT=${AZURE_COSMOS_ENDPOINT:-}
+      - AZURE_COSMOS_KEY=${AZURE_COSMOS_KEY:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
