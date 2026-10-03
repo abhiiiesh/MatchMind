@@ -199,8 +199,31 @@ async def test_rest_api_endpoints():
             assert res_pause.status_code == 200
             assert res_pause.json()["is_playing"] is False
 
+            # 13. Phase C: Spatial Heatmap endpoint
+            res_hm = await client.get("/api/match/arsenal_liverpool_2024/spatial/heatmap")
+            assert res_hm.status_code == 200
+            hm_data = res_hm.json()
+            assert "points" in hm_data
+            assert len(hm_data["points"]) > 0
+
+            # 14. Phase C: Pass Network endpoint
+            res_pn = await client.get("/api/match/arsenal_liverpool_2024/spatial/pass_network?team=Arsenal")
+            assert res_pn.status_code == 200
+            pn_data = res_pn.json()
+            assert "nodes" in pn_data
+            assert "links" in pn_data
+            assert len(pn_data["nodes"]) > 0
+
+            # 15. Phase C: Defensive Pressure Zones endpoint
+            res_pz = await client.get("/api/match/arsenal_liverpool_2024/spatial/pressure_zones?team=Arsenal")
+            assert res_pz.status_code == 200
+            pz_data = res_pz.json()
+            assert "total_pressures" in pz_data
+            assert "high_press_pct" in pz_data
+
             assert "audio" in res_audio.headers.get("content-type", "")
             assert len(res_audio.content) > 0
+
 
 
 

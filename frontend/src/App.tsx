@@ -286,6 +286,7 @@ export const App: React.FC = () => {
             awayTeamName={metrics?.away_team ?? timeline?.away_team ?? "Liverpool"}
             focusedPlayer={focusedPlayer}
             onSelectPlayer={setFocusedPlayer}
+            matchId={matchId}
           />
 
           {/* Phase B: Interactive Timeline Scrubber & Replay Controller */}

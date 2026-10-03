@@ -137,3 +137,63 @@ export interface MatchTimelineInfo {
   key_moments: KeyMoment[];
 }
 
+export type PitchOverlayMode = "standard" | "heatmap" | "pass_network" | "pressing";
+
+export interface HeatmapPoint {
+  x: number;
+  y: number;
+  intensity: number;
+  count: number;
+}
+
+export interface HeatmapData {
+  pitch_length: number;
+  pitch_width: number;
+  total_actions: number;
+  max_intensity: number;
+  points: HeatmapPoint[];
+}
+
+export interface PassNode {
+  id: string;
+  name: string;
+  jersey_number: number;
+  position: string;
+  x: number;
+  y: number;
+  touch_count: number;
+}
+
+export interface PassLink {
+  source: string;
+  target: string;
+  count: number;
+  weight: number;
+}
+
+export interface PassNetworkData {
+  team: string;
+  nodes: PassNode[];
+  links: PassLink[];
+  total_links: number;
+}
+
+export interface PressureZoneData {
+  team: string;
+  total_pressures: number;
+  high_press_pct: number;
+  breakdown: {
+    high_press_attacking_third: number;
+    mid_block_middle_third: number;
+    low_block_defensive_third: number;
+  };
+  high_press_actions: Array<{
+    x: number;
+    y: number;
+    player: string;
+    type: string;
+    outcome: string;
+  }>;
+}
+
+
