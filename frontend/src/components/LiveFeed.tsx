@@ -5,17 +5,24 @@ interface LiveFeedProps {
   messages: VerifiedMessagePayload[];
   activePersona: PersonaType;
   activeLanguage: LanguageCode;
+  onSelectPlayer?: (playerName: string) => void;
 }
 
 export const LiveFeed: React.FC<LiveFeedProps> = ({
   messages,
   activePersona,
   activeLanguage,
+  onSelectPlayer,
 }) => {
-  const feedEndRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    feedEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (containerRef.current) {
+      containerRef.current.scrollTo({
+        top: containerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages]);
 
   const getCommentaryText = (msg: VerifiedMessagePayload): string => {
@@ -46,7 +53,7 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
       </div>
 
       {/* Scrolling Content */}
-      <div className="flex-1 overflow-y-auto p-3.5 space-y-3 custom-scrollbar max-h-[460px]">
+      <div ref={containerRef} className="flex-1 overflow-y-auto p-3.5 space-y-3 custom-scrollbar max-h-[460px]">
         {messages.length === 0 ? (
           <div className="text-center py-12 text-slate-500 text-sm italic">
             Connecting to multi-agent stream... Trigger simulation to see live narratives.
@@ -55,6 +62,7 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
           messages.map((msg, idx) => {
             const isGoal = msg.event.outcome === "Goal";
             const text = getCommentaryText(msg);
+            const playerName = msg.event.player?.name;
 
             return (
               <div
@@ -66,7 +74,7 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="font-bold text-emerald-400 bg-emerald-950/50 px-1.5 py-0.5 rounded text-[11px]">
                       {msg.metric_state.minute}'
                     </span>
@@ -77,6 +85,15 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
                     <span className="text-slate-400 capitalize">
                       {msg.event.event_type}
                     </span>
+                    {playerName && (
+                      <button
+                        onClick={() => onSelectPlayer?.(playerName)}
+                        className="text-[11px] bg-indigo-500/10 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 px-1.5 py-0.2 rounded transition-colors ml-1 font-medium"
+                        title={`Click to focus on ${playerName}`}
+                      >
+                        👤 {playerName}
+                      </button>
+                    )}
                   </div>
 
                   {isGoal && (
@@ -93,7 +110,6 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
             );
           })
         )}
-        <div ref={feedEndRef} />
       </div>
     </div>
   );

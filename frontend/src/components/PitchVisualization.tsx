@@ -180,8 +180,15 @@ export const PitchVisualization: React.FC<PitchProps> = ({
           </g>
         )}
 
-        {/* Ball Location Pulse */}
-        <g className="cursor-pointer" onClick={() => onSelectPlayer(currentEvent?.player?.name ?? null)}>
+        {/* Ball Location Pulse & Expanded Click Hit Area */}
+        <g
+          data-testid="player-ball-node"
+          className="cursor-pointer group"
+          onClick={() => onSelectPlayer(currentEvent?.player?.name ?? null)}
+        >
+          {/* Expanded transparent hit target for easy clicking */}
+          <circle cx={startX} cy={startY} r="8" fill="transparent" pointerEvents="all" />
+
           {/* Pressure Ring */}
           {currentEvent?.under_pressure && (
             <circle
@@ -200,9 +207,9 @@ export const PitchVisualization: React.FC<PitchProps> = ({
           <circle
             cx={startX}
             cy={startY}
-            r="3.2"
+            r="3.5"
             fill={actorColor}
-            opacity="0.3"
+            opacity="0.35"
             className="animate-ping"
           />
 
@@ -210,24 +217,24 @@ export const PitchVisualization: React.FC<PitchProps> = ({
           <circle
             cx={startX}
             cy={startY}
-            r="2.2"
+            r="2.4"
             fill="#ffffff"
             stroke={actorColor}
-            strokeWidth="1"
+            strokeWidth="1.2"
           />
 
           {/* Actor Player Name Tag */}
           {currentEvent?.player?.name && (
             <g transform={`translate(${startX}, ${startY - 4})`}>
               <rect
-                x="-12"
-                y="-3.5"
-                width="24"
-                height="4.5"
-                rx="1.2"
-                fill="rgba(10, 15, 25, 0.85)"
+                x="-14"
+                y="-3.8"
+                width="28"
+                height="4.8"
+                rx="1.4"
+                fill="rgba(10, 15, 25, 0.9)"
                 stroke={actorColor}
-                strokeWidth="0.3"
+                strokeWidth="0.4"
               />
               <text
                 x="0"
@@ -263,6 +270,33 @@ export const PitchVisualization: React.FC<PitchProps> = ({
           </button>
         </div>
       )}
+
+      {/* Quick Interactive Roster Bar for Player Focus Mode */}
+      <div className="absolute bottom-2 left-2 right-2 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-lg border border-slate-800/80 flex items-center justify-between text-[11px] gap-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+          <span className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider shrink-0 mr-1">
+            Focus:
+          </span>
+          {["Bukayo Saka", "Martin Ødegaard", "Declan Rice", "Mohamed Salah", "Virgil van Dijk"].map(
+            (p) => (
+              <button
+                key={p}
+                onClick={() => onSelectPlayer(focusedPlayer === p ? null : p)}
+                className={`px-2 py-0.5 rounded text-[10px] font-semibold transition-all shrink-0 ${
+                  focusedPlayer === p
+                    ? "bg-amber-400 text-slate-950 font-bold shadow-md shadow-amber-400/20"
+                    : "bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800"
+                }`}
+              >
+                {p}
+              </button>
+            )
+          )}
+        </div>
+        <span className="text-slate-500 text-[10px] hidden sm:inline shrink-0">
+          Click dot or player to drill down
+        </span>
+      </div>
     </div>
   );
 };

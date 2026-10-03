@@ -154,6 +154,7 @@ export const App: React.FC = () => {
               messages={feedMessages}
               activePersona={activePersona}
               activeLanguage={activeLanguage}
+              onSelectPlayer={setFocusedPlayer}
             />
           </div>
         </div>
