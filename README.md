@@ -96,9 +96,14 @@ uv pip install -r requirements.txt --python .venv\Scripts\python.exe
 ```
 
 ### 3. Verify the Pipeline & Run Tests
-Run the integration test suite covering all 6 micro-agents and API endpoints:
+Run the integration test suite covering all 7 micro-agents and API endpoints:
 ```bash
 .venv\Scripts\pytest.exe tests\test_integration\test_full_pipeline.py -v
+```
+
+Or run the live 7-agent terminal simulation showing historical RAG enrichment in real-time:
+```bash
+.venv\Scripts\python.exe scripts\test_context_pipeline.py
 ```
 
 ### 4. Start the Backend API & WebSocket Server
@@ -115,7 +120,7 @@ In a second terminal window:
 cd frontend
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser. Click **"▶ Live Simulation"** to stream match events through the 6-agent cluster with real-time pitch animations and multilingual narratives.
+Open [http://localhost:5173](http://localhost:5173) in your browser. Click **"▶ Live Simulation"** to stream match events through the 7-agent cluster with real-time pitch animations and multilingual narratives.
 
 ---
 
@@ -127,6 +132,7 @@ Open [http://localhost:5173](http://localhost:5173) in your browser. Click **"�
 ├── requirements.txt          # Python requirements
 ├── data/
 │   ├── cache/                # Local cache for match events
+│   ├── historical/           # Player profiles, team records, rivalry database (RAG)
 │   ├── schemas/              # JSON schemas for inter-agent messages
 │   └── synthetic/            # Synthetic match event generators
 ├── docs/                     # Strategic research, MBA analysis, implementation plan
@@ -136,8 +142,11 @@ Open [http://localhost:5173](http://localhost:5173) in your browser. Click **"�
 │   ├── constants.py          # Coordinates, thresholds, taxonomies
 │   ├── config.py             # Pydantic configuration
 │   ├── models.py             # MatchEvent, MetricState, AgentMessage models
-│   ├── agents/               # 6 Micro-Agents (Ingestion, Metrics, Narrative, Persona, Translator, FactChecker)
+│   ├── agents/               # 7 Micro-Agents (Ingestion, Metrics, Context, Narrative, Persona, Translator, FactChecker)
 │   ├── metrics/              # xG, xT, PPDA, Field Tilt analytics engines
+│   ├── context/              # Historical RAG retrieval engine
+│   ├── narrative/            # Story arc, local fallback, personas, prompt templates
+
 │   ├── narrative/            # Story arc, causality explainer, persona templates
 │   └── delivery/             # FastAPI REST server, WebSocket manager, OBS overlay
 ├── scripts/
