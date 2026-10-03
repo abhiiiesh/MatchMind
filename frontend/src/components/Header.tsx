@@ -1,4 +1,5 @@
-import type { LanguageCode, PersonaType } from "../types";
+import React from "react";
+import type { LanguageCode, MatchSummary, PersonaType } from "../types";
 
 interface HeaderProps {
   activePersona: PersonaType;
@@ -8,6 +9,8 @@ interface HeaderProps {
   onTriggerSimulation: (source: "synthetic" | "statsbomb") => void;
   isSimulating: boolean;
   matchId: string;
+  matches: MatchSummary[];
+  onSelectMatch: (matchId: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -18,10 +21,12 @@ export const Header: React.FC<HeaderProps> = ({
   onTriggerSimulation,
   isSimulating,
   matchId,
+  matches,
+  onSelectMatch,
 }) => {
   return (
     <header className="bg-slate-950/90 border-b border-slate-800/80 px-4 py-3 backdrop-blur-md sticky top-0 z-50 flex flex-wrap items-center justify-between gap-3">
-      {/* Brand & Title */}
+      {/* Brand & Match Selector */}
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-lg bg-gradient-to-tr from-[#38003c] to-[#00ff87] flex items-center justify-center font-black text-white text-lg shadow-lg shadow-emerald-950/50">
           M
@@ -38,6 +43,24 @@ export const Header: React.FC<HeaderProps> = ({
           <p className="text-[11px] text-slate-400">
             Multi-Agent Explainable Football Intelligence
           </p>
+        </div>
+
+        {/* Phase B: Premier League Match Fixture Dropdown */}
+        <div className="hidden sm:flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 ml-2 shadow-inner">
+          <span className="text-xs">⚽</span>
+          <select
+            value={matchId}
+            onChange={(e) => onSelectMatch(e.target.value)}
+            className="bg-transparent text-xs font-bold text-slate-100 outline-none cursor-pointer max-w-[240px] truncate"
+            title="Switch Premier League match fixture"
+          >
+            {matches.map((m) => (
+              <option key={m.match_id} value={m.match_id} className="bg-slate-900 text-slate-200">
+                {m.source_type === "statsbomb" ? "🏆 " : "⚡ "}
+                {m.home_team} vs {m.away_team} ({m.final_score.home}-{m.final_score.away})
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -118,7 +141,7 @@ export const Header: React.FC<HeaderProps> = ({
             </>
           ) : (
             <>
-              <span>▶ Live Simulation</span>
+              <span>▶ Live Stream</span>
             </>
           )}
         </button>

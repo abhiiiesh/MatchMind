@@ -85,3 +85,55 @@ export interface AgentHealth {
 
 export type PersonaType = "tactical_analyst" | "casual_fan" | "broadcast_commentator" | "accessibility_audio";
 export type LanguageCode = "en" | "es" | "hi" | "ar" | "pt" | "fr";
+
+export interface KeyMoment {
+  id: string;
+  minute: number;
+  second: number;
+  period: number;
+  moment_type: "GOAL" | "RED_CARD" | "YELLOW_CARD" | "BIG_CHANCE" | "TACTICAL_SHIFT" | string;
+  team: string;
+  player: string;
+  description: string;
+  score_after: string;
+  xg?: number;
+  leverage_index: number;
+}
+
+export interface MatchSummary {
+  match_id: string;
+  title: string;
+  competition: string;
+  season: string;
+  date: string;
+  venue: string;
+  home_team: string;
+  away_team: string;
+  home_badge_color: string;
+  away_badge_color: string;
+  final_score: { home: number; away: number };
+  duration_minutes: number;
+  source_type: "curated" | "statsbomb";
+  description: string;
+  key_moments: KeyMoment[];
+}
+
+export interface MatchTimelineInfo {
+  match_id: string;
+  title: string;
+  competition: string;
+  home_team: string;
+  away_team: string;
+  home_badge_color: string;
+  away_badge_color: string;
+  final_score: { home: number; away: number };
+  duration_minutes: number;
+  total_events: number;
+  current_index: number;
+  current_minute: number;
+  current_second?: number;
+  is_playing: boolean;
+  speed: number;
+  key_moments: KeyMoment[];
+}
+

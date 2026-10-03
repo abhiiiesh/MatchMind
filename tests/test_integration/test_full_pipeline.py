@@ -158,6 +158,47 @@ async def test_rest_api_endpoints():
             audio_id = speech_data["audio_id"]
             res_audio = await client.get(f"/api/speech/audio/{audio_id}")
             assert res_audio.status_code == 200
+
+            # 9. Phase B: Match Catalog endpoint
+            res_matches = await client.get("/api/matches")
+            assert res_matches.status_code == 200
+            matches_data = res_matches.json()
+            assert "matches" in matches_data
+            assert len(matches_data["matches"]) >= 4
+
+            # 10. Phase B: Timeline endpoint
+            res_timeline = await client.get("/api/match/arsenal_liverpool_2024/timeline")
+            assert res_timeline.status_code == 200
+            timeline_data = res_timeline.json()
+            assert timeline_data["home_team"] == "Arsenal"
+            assert timeline_data["away_team"] == "Liverpool"
+            assert len(timeline_data["key_moments"]) >= 5
+
+            # 11. Phase B: Seek to key moment (Saka 14' goal)
+            res_seek = await client.post(
+                "/api/match/arsenal_liverpool_2024/seek",
+                json={"moment_id": "m1_14"},
+            )
+            assert res_seek.status_code == 200
+            seek_data = res_seek.json()
+            assert seek_data["status"] == "seek_complete"
+            assert seek_data["current_minute"] == 14
+
+            # 12. Phase B: Playback controls (play, pause, reset)
+            res_play = await client.post(
+                "/api/match/arsenal_liverpool_2024/playback",
+                json={"action": "play", "speed": 2.0},
+            )
+            assert res_play.status_code == 200
+            assert res_play.json()["is_playing"] is True
+
+            res_pause = await client.post(
+                "/api/match/arsenal_liverpool_2024/playback",
+                json={"action": "pause"},
+            )
+            assert res_pause.status_code == 200
+            assert res_pause.json()["is_playing"] is False
+
             assert "audio" in res_audio.headers.get("content-type", "")
             assert len(res_audio.content) > 0
 

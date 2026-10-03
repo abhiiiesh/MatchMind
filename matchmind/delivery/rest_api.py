@@ -10,6 +10,8 @@ from pydantic import BaseModel, Field
 import structlog
 
 from matchmind.speech.speech_service import speech_service
+from matchmind.playback.match_catalog import get_match_catalog, get_match
+from matchmind.playback.replay_session import replay_session
 
 from data.synthetic.generator import SyntheticMatchGenerator
 from data.synthetic.statsbomb_adapter import StatsBombStreamer
@@ -54,6 +56,12 @@ async def lifespan(app: FastAPI):
             return manager.broadcast_message(message)
 
     orchestrator.subscribe(on_verified_output)
+    replay_session.orchestrator = orchestrator
+    try:
+        replay_session.load_match("arsenal_liverpool_2024")
+    except Exception as exc:
+        logger.warning("Could not pre-load default match into replay session", error=str(exc))
+
     await orchestrator.start()
     logger.info("MatchMind Multi-Agent Cluster is online and ready")
 
@@ -212,6 +220,97 @@ async def start_simulation(
         "events_count": events_count,
         "delay_seconds": delay_seconds,
     }
+
+
+@app.get("/api/matches")
+async def list_matches():
+    """Returns list of curated and historic Premier League matches available for replay."""
+    matches = get_match_catalog()
+    return {"matches": [m.model_dump() for m in matches]}
+
+
+@app.get("/api/match/{match_id}/timeline")
+async def get_timeline(match_id: str):
+    """Returns detailed timeline, score progression, and key highlight moments for scrubber navigation."""
+    if replay_session.active_match_id != match_id:
+        try:
+            replay_session.load_match(match_id)
+        except ValueError:
+            return JSONResponse(status_code=404, content={"error": f"Match '{match_id}' not found"})
+    return replay_session.get_timeline_info()
+
+
+@app.post("/api/match/{match_id}/select")
+async def select_match(match_id: str):
+    """Switches the active match and dispatches the opening kickoff event."""
+    try:
+        summary = replay_session.load_match(match_id)
+    except ValueError as exc:
+        return JSONResponse(status_code=404, content={"error": str(exc)})
+
+    if replay_session.events:
+        await replay_session._dispatch_event(replay_session.events[0])
+
+    return {"status": "match_selected", "match": summary.model_dump(), "timeline": replay_session.get_timeline_info()}
+
+
+class PlaybackControlRequest(BaseModel):
+    action: str = Field(..., description="Control action: 'play', 'pause', 'reset', 'step_forward', 'step_backward'")
+    speed: Optional[float] = Field(1.0, description="Playback speed: 1.0, 2.0, 5.0, 10.0")
+
+
+@app.post("/api/match/{match_id}/playback")
+async def control_playback(match_id: str, req: PlaybackControlRequest):
+    """Controls the replay timeline playback (play, pause, speed modulation, stepping)."""
+    if replay_session.active_match_id != match_id:
+        replay_session.load_match(match_id)
+
+    if req.action == "play":
+        replay_session.play(speed=req.speed or 1.0)
+    elif req.action == "pause":
+        replay_session.pause()
+    elif req.action == "reset":
+        replay_session.pause()
+        await replay_session.seek_to_minute(0)
+    elif req.action == "step_forward":
+        await replay_session.step(forward=True)
+    elif req.action == "step_backward":
+        await replay_session.step(forward=False)
+    else:
+        return JSONResponse(status_code=400, content={"error": f"Unknown action '{req.action}'"})
+
+    return replay_session.get_timeline_info()
+
+
+class SeekRequest(BaseModel):
+    target_minute: Optional[int] = Field(None, description="Seek to match minute (0-95)")
+    moment_id: Optional[str] = Field(None, description="Direct jump to key moment highlight ID")
+
+
+@app.post("/api/match/{match_id}/seek")
+async def seek_timeline(match_id: str, req: SeekRequest):
+    """Seeks the match timeline to a designated minute or key moment highlight pin."""
+    if replay_session.active_match_id != match_id:
+        replay_session.load_match(match_id)
+
+    if req.moment_id:
+        ev = await replay_session.seek_to_moment(req.moment_id)
+    elif req.target_minute is not None:
+        ev = await replay_session.seek_to_minute(req.target_minute)
+    else:
+        return JSONResponse(status_code=400, content={"error": "Must supply target_minute or moment_id"})
+
+    if not ev:
+        return JSONResponse(status_code=404, content={"error": "Target moment or minute could not be reached"})
+
+    return {
+        "status": "seek_complete",
+        "current_minute": ev.minute,
+        "event_index": ev.index,
+        "event_type": ev.event_type,
+        "timeline": replay_session.get_timeline_info(),
+    }
+
 
 
 @app.get("/overlay", response_class=HTMLResponse)
