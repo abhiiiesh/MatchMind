@@ -2,10 +2,12 @@
 
 import asyncio
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Optional
-from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import structlog
 
@@ -89,9 +91,9 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-async def root():
-    """Health check and platform status."""
+@app.get("/api/health")
+async def health_check():
+    """Health check and platform status endpoint."""
     return {
         "platform": "MatchMind Football Intelligence",
         "hackathon": "Microsoft Premier League - Inside the Game",
@@ -99,6 +101,23 @@ async def root():
         "active_agents": len(orchestrator.agents),
         "docs_url": "/docs",
     }
+
+
+@app.get("/")
+async def root(request: Request):
+    """Health check JSON or Single Page Application index.html for web browsers."""
+    accept = request.headers.get("accept", "")
+    index_file = Path("frontend/dist/index.html")
+    if "text/html" in accept and index_file.exists():
+        return FileResponse(index_file)
+    return {
+        "platform": "MatchMind Football Intelligence",
+        "hackathon": "Microsoft Premier League - Inside the Game",
+        "status": "online",
+        "active_agents": len(orchestrator.agents),
+        "docs_url": "/docs",
+    }
+
 
 
 @app.get("/api/agents/status")
@@ -403,3 +422,10 @@ async def websocket_match_feed(
             data = await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(websocket, match_id=match_id)
+
+
+# Mount static assets if built frontend is present (Single-Container Docker Mode)
+_dist_assets = Path("frontend/dist/assets")
+if _dist_assets.exists():
+    app.mount("/assets", StaticFiles(directory=str(_dist_assets)), name="assets")
+
