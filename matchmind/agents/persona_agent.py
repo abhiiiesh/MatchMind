@@ -63,7 +63,7 @@ class PersonaAgent(BaseAgent):
 
         out_message = AgentMessage(
             source_agent=self.agent_id,
-            target_agents=["*"],
+            target_agents=["translator_agent"],
             match_id=message.match_id,
             event_index=message.event_index,
             match_minute=message.match_minute,
