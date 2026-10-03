@@ -23,24 +23,26 @@ class LocalNarrativeEngine:
         field_tilt: float,
         ppda: float,
         leverage_index: float,
+        historical_context: Optional[str] = None,
     ) -> str:
         """Explains WHY the moment is tactically critical."""
+        explanation = ""
         if event_type == "Shot":
             xg_val = action_xg or 0.10
             if xg_val >= 0.40:
-                return (
+                explanation = (
                     f"{player_name}'s high-probability effort (xG: {xg_val:.2f}) was created by breaking "
                     f"the central defensive line. The opposing center-backs were dragged 6+ meters out "
                     f"of shape, presenting a clear shooting lane rarely conceded in Premier League fixtures."
                 )
             elif xg_val <= 0.08:
-                return (
+                explanation = (
                     f"An extraordinary low-probability attempt (xG: {xg_val:.2f}). {player_name} converted "
                     f"under heavy defensive pressure from an acute angle, beating the goalkeeper's post-shot "
                     f"positioning through sheer individual technique."
                 )
             else:
-                return (
+                explanation = (
                     f"Shot with an expected goal value of {xg_val:.2f}. Generated during sustained pressure "
                     f"(Field Tilt: {field_tilt:.1f}%), forcing the defensive block into a frantic retreat."
                 )
@@ -48,35 +50,41 @@ class LocalNarrativeEngine:
         elif event_type == "Pass":
             xt_val = action_xt or 0.0
             if xt_val > 0.05:
-                return (
+                explanation = (
                     f"{player_name}'s progressive ball penetrated multiple defensive layers (Threat Added: +{xt_val:.3f} xT). "
                     f"This line-breaking pass bypasses the opponent's pressing trap and directly shifts play into the final third."
                 )
             elif xt_val < -0.02:
-                return (
+                explanation = (
                     f"A backward recycling pass under tactical pressure. With the opponent maintaining an aggressive "
                     f"PPDA of {ppda:.1f}, {team_name} reset possession to evade a midfield turnover trap."
                 )
             else:
-                return (
+                explanation = (
                     f"Routine possession maintenance by {player_name}. Sustaining tempo as {team_name} control "
                     f"possession rhythm."
                 )
 
         elif event_type in ["Interception", "Duel", "Pressure", "Block"]:
             if ppda <= 9.0:
-                return (
+                explanation = (
                     f"High-intensity defensive intervention by {player_name}. Part of a coordinated counter-press "
                     f"(PPDA: {ppda:.1f}) specifically intended to choke transition lanes and force an immediate turnover."
                 )
             else:
-                return (
+                explanation = (
                     f"Defensive containment by {player_name}. Resetting the defensive shape to restrict half-space penetration."
                 )
+        else:
+            explanation = (
+                f"Tactical phase at minute {minute}. {team_name} organizing their shape with leverage index at {leverage_index:.1f}."
+            )
 
-        return (
-            f"Tactical phase at minute {minute}. {team_name} organizing their shape with leverage index at {leverage_index:.1f}."
-        )
+        if historical_context:
+            explanation += f" Historical Context: {historical_context}"
+
+        return explanation
+
 
     @classmethod
     def generate_persona_commentary(

@@ -18,7 +18,7 @@ class NarrativeAgent(BaseAgent):
         super().__init__(
             agent_id="narrative_agent",
             role_name="Tactical Narrative & Causality Engine",
-            supported_message_types=["METRIC_UPDATE"],
+            supported_message_types=["CONTEXT_ENRICHED", "METRIC_UPDATE"],
         )
         self.azure_client = AzureOpenAIClient()
         self.arc_classifier = StoryArcClassifier()
@@ -33,6 +33,7 @@ class NarrativeAgent(BaseAgent):
                 metric_dict["match_id"] = message.match_id
             metric_state = MetricState(**metric_dict)
         event = payload.get("event", {})
+        historical_context = payload.get("historical_context", {})
 
         # Classify the global narrative arc
         story_arc = self.arc_classifier.classify_arc(metric_state)
@@ -53,6 +54,7 @@ class NarrativeAgent(BaseAgent):
             "field_tilt": metric_state.field_tilt,
             "leverage_index": metric_state.current_leverage_index,
             "story_arc": story_arc,
+            "historical_context": historical_context,
             "event": {
                 "type": event.get("event_type"),
                 "team": team_name,
@@ -64,15 +66,16 @@ class NarrativeAgent(BaseAgent):
             },
         }
 
-
         # Generate structured explanation and draft commentary
         narrative_result = await self.azure_client.generate_structured_narrative(
             match_context=match_context,
             fallback_params={
                 "event": event,
                 "metric_state": metric_dict,
+                "historical_context": historical_context,
             },
         )
+
 
         out_payload = {
             "story_arc": story_arc,

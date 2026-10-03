@@ -135,6 +135,9 @@ class AzureOpenAIClient:
         leverage = ms.get("current_leverage_index", 1.0)
         outcome = evt.get("outcome", "Success")
 
+        hist_ctx = fallback_params.get("historical_context") or {}
+        historical_nugget = hist_ctx.get("narrative_nugget") if isinstance(hist_ctx, dict) else None
+
         why_matters = LocalNarrativeEngine.generate_why_it_matters(
             event_type=event_type,
             team_name=team_name,
@@ -146,7 +149,9 @@ class AzureOpenAIClient:
             field_tilt=field_tilt,
             ppda=ppda,
             leverage_index=leverage,
+            historical_context=historical_nugget,
         )
+
 
         analyst = LocalNarrativeEngine.generate_persona_commentary(
             persona=FanPersona.TACTICAL_ANALYST,

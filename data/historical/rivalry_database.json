@@ -1,0 +1,51 @@
+{
+  "rivalries": {
+    "Arsenal_vs_Liverpool": {
+      "fixture_title": "Arsenal vs Liverpool",
+      "total_meetings": 242,
+      "head_to_head": {
+        "Arsenal_wins": 82,
+        "Liverpool_wins": 95,
+        "draws": 65
+      },
+      "goals_per_game_avg": 2.94,
+      "recent_form_last_5": "Arsenal: 2W, 2D, 1L",
+      "historical_narrative": "One of the most storied fixtures in English football history, renowned for dramatic late goals (Michael Thomas 1989, Arshavin's 4 goals in 2009). The match average of nearly 3 goals per game makes it the highest-scoring classic rivalry in Premier League records.",
+      "key_matchup_factors": [
+        "Fixtures at Emirates Stadium feature an average of 3.2 expected goals (xG) combined",
+        "The team scoring first has failed to win in 4 of the last 7 meetings, highlighting volatile momentum swings",
+        "Over 65% of goals between these two sides in the modern era occur in the second half"
+      ]
+    },
+    "Arsenal_vs_Tottenham Hotspur": {
+      "fixture_title": "North London Derby",
+      "total_meetings": 195,
+      "head_to_head": {
+        "Arsenal_wins": 86,
+        "Tottenham_wins": 61,
+        "draws": 48
+      },
+      "goals_per_game_avg": 3.12,
+      "historical_narrative": "Fierce local rivalry characterized by explosive emotions, high card counts (average 4.8 cards per game), and relentless attacking open-play.",
+      "key_matchup_factors": [
+        "Has produced 9 penalties in the last 11 league encounters",
+        "Both teams have scored in 8 of the previous 9 North London derbies"
+      ]
+    },
+    "Liverpool_vs_Manchester City": {
+      "fixture_title": "The Modern Premier League Title Decider",
+      "total_meetings": 194,
+      "head_to_head": {
+        "Liverpool_wins": 93,
+        "Manchester City_wins": 60,
+        "draws": 41
+      },
+      "goals_per_game_avg": 2.88,
+      "historical_narrative": "The defining tactical rivalry of the modern era between Klopp/Slot's relentless heavy-metal verticality and Guardiola's structural positional supremacy.",
+      "key_matchup_factors": [
+        "Title races decided by single-point margins in 2018-19 and 2021-22",
+        "Fixtures average the highest tactical pressing intensity (combined PPDA under 8.5) in Europe"
+      ]
+    }
+  }
+}

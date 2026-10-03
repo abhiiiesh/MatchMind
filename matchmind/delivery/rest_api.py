@@ -13,7 +13,9 @@ from data.synthetic.statsbomb_adapter import StatsBombStreamer
 from matchmind.agents.factcheck_agent import FactCheckerAgent
 from matchmind.agents.ingestion_agent import IngestionAgent
 from matchmind.agents.metrics_agent import MetricsAgent
+from matchmind.agents.context_agent import ContextAgent
 from matchmind.agents.narrative_agent import NarrativeAgent
+
 from matchmind.agents.orchestrator import AgentOrchestrator
 from matchmind.agents.persona_agent import PersonaAgent
 from matchmind.agents.translator_agent import TranslatorAgent
@@ -33,13 +35,15 @@ async def lifespan(app: FastAPI):
     """Initializes and registers the full multi-agent cluster on startup."""
     logger.info("Initializing MatchMind Multi-Agent Cluster...")
 
-    # Register all 6 specialized agents
+    # Register all 7 specialized agents
     orchestrator.register_agent(IngestionAgent())
     orchestrator.register_agent(MetricsAgent())
+    orchestrator.register_agent(ContextAgent())
     orchestrator.register_agent(NarrativeAgent())
     orchestrator.register_agent(PersonaAgent())
     orchestrator.register_agent(TranslatorAgent())
     orchestrator.register_agent(FactCheckerAgent())
+
 
     # Subscribe WebSocket broadcaster to verified outputs
     def on_verified_output(message: AgentMessage):

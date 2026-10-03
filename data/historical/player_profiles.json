@@ -1,0 +1,117 @@
+{
+  "players": {
+    "Mohamed Salah": {
+      "team": "Liverpool",
+      "position": "RW",
+      "appearances": 260,
+      "goals": 158,
+      "assists": 72,
+      "xG_per_90": 0.68,
+      "milestones": [
+        "Needs 1 goal for 100 Premier League goals at Anfield",
+        "Scored in 6 consecutive home fixtures against 'Big Six' opposition",
+        "Ranks #3 all-time in Premier League goals for Liverpool"
+      ],
+      "signature_traits": "Elite cut-inside finishing on left foot, 0.72 goal involvements per 90 in high-leverage games"
+    },
+    "Bukayo Saka": {
+      "team": "Arsenal",
+      "position": "RW",
+      "appearances": 182,
+      "goals": 49,
+      "assists": 44,
+      "xG_per_90": 0.42,
+      "milestones": [
+        "1 goal away from reaching 50 Premier League career goals",
+        "Youngest Arsenal player to surpass 40 goals and 40 assists since Cesc Fàbregas",
+        "Averages 3.4 penalty-box carries per 90, #1 among English wingers"
+      ],
+      "signature_traits": "Exceptional ball retention under 2+ defensive markers, incisive half-space delivery"
+    },
+    "Martin Ødegaard": {
+      "team": "Arsenal",
+      "position": "CAM",
+      "appearances": 138,
+      "goals": 32,
+      "assists": 28,
+      "xG_per_90": 0.31,
+      "milestones": [
+        "Created more open-play chances (112) in 2023-24 than any Premier League midfielder",
+        "Arsenal win rate drops from 74% to 45% in fixtures when he does not start"
+      ],
+      "signature_traits": "Surgical line-breaking passing through central defensive traps, tempo dictator"
+    },
+    "Virgil van Dijk": {
+      "team": "Liverpool",
+      "position": "CB",
+      "appearances": 235,
+      "goals": 21,
+      "aerial_duel_win_pct": 77.4,
+      "milestones": [
+        "Holds highest aerial duel success rate (77.4%) in Premier League tracking history",
+        "Unbeaten in 84 of 92 Premier League matches at Anfield when completing 90 minutes"
+      ],
+      "signature_traits": "Commanding aerial dominance, long diagonal switches, calmness under relentless counter-press"
+    },
+    "Trent Alexander-Arnold": {
+      "team": "Liverpool",
+      "position": "RB",
+      "appearances": 242,
+      "goals": 16,
+      "assists": 62,
+      "milestones": [
+        "Highest assist tally by a defender in Premier League history (62 assists)",
+        "Over 45% of Liverpool's progressive passes originate from his inverted midfield zones"
+      ],
+      "signature_traits": "World-class crossing technique, quarterback vision from deep right half-space"
+    },
+    "Gabriel Martinelli": {
+      "team": "Arsenal",
+      "position": "LW",
+      "appearances": 140,
+      "goals": 35,
+      "assists": 21,
+      "milestones": [
+        "Fastest recorded sprint speed for Arsenal this season (35.8 km/h)",
+        "Scored in 3 of his last 4 appearances against Liverpool"
+      ],
+      "signature_traits": "Direct vertical sprint power, relentless defensive tracking from front line"
+    },
+    "Declan Rice": {
+      "team": "Arsenal",
+      "position": "DM",
+      "appearances": 215,
+      "goals": 16,
+      "tackles_won_pct": 69.2,
+      "milestones": [
+        "Leads the Premier League in defensive third interceptions (2.4 per 90)",
+        "Scored 2 dramatic 90th+ minute stoppage time winners last campaign"
+      ],
+      "signature_traits": "Elite physical recovery strides, press resistance under heavy transition pressure"
+    },
+    "Darwin Núñez": {
+      "team": "Liverpool",
+      "position": "CF",
+      "appearances": 72,
+      "goals": 24,
+      "shots_per_90": 4.6,
+      "milestones": [
+        "Averages 4.6 shots per 90, the highest volume in European top-flight leagues",
+        "Has hit the woodwork 14 times, an all-time record rate"
+      ],
+      "signature_traits": "Explosive channel runner, chaotic transition presence creating panic in defensive lines"
+    },
+    "Erling Haaland": {
+      "team": "Manchester City",
+      "position": "CF",
+      "appearances": 75,
+      "goals": 73,
+      "assists": 14,
+      "milestones": [
+        "Fastest player to reach 50 Premier League goals (48 matches)",
+        "Has scored 8 Premier League hat-tricks in under three seasons"
+      ],
+      "signature_traits": "Unstoppable box-entry acceleration, 0.95 xG conversion inside the 6-yard area"
+    }
+  }
+}

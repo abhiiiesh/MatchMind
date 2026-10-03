@@ -174,8 +174,9 @@ class MetricsAgent(BaseAgent):
 
         out_msg = AgentMessage(
             source_agent=self.agent_id,
-            target_agents=["narrative_agent", "context_agent"],
+            target_agents=["context_agent"],
             match_id=event.match_id,
+
             event_index=event.index,
             match_minute=event.minute,
             message_type="METRIC_UPDATE",

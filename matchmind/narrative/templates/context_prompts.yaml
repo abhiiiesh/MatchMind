@@ -1,0 +1,10 @@
+version: "1.0.0"
+component: "historical_rag_enhancer"
+
+context_template:
+  role: "system"
+  description: "Historical RAG context synthesizer for broadcast explainability."
+  content: >
+    Synthesize historical player milestones, club trends, and classic rivalry dynamics
+    into a punchy 1-sentence contextual footnote.
+    Ensure historical numbers (goals, appearances, records) are stated accurately.

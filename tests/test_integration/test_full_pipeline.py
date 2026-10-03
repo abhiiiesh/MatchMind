@@ -8,6 +8,7 @@ from data.synthetic.generator import SyntheticMatchGenerator
 from matchmind.agents.factcheck_agent import FactCheckerAgent
 from matchmind.agents.ingestion_agent import IngestionAgent
 from matchmind.agents.metrics_agent import MetricsAgent
+from matchmind.agents.context_agent import ContextAgent
 from matchmind.agents.narrative_agent import NarrativeAgent
 from matchmind.agents.orchestrator import AgentOrchestrator
 from matchmind.agents.persona_agent import PersonaAgent
@@ -17,13 +18,14 @@ from matchmind.models import AgentMessage
 
 
 @pytest.mark.asyncio
-async def test_full_6_agent_pipeline():
-    """Verify that events cascade through all 6 specialized agents to VERIFIED_OUTPUT."""
+async def test_full_7_agent_pipeline():
+    """Verify that events cascade through all 7 specialized agents to VERIFIED_OUTPUT."""
     orchestrator = AgentOrchestrator()
 
-    # Register all 6 specialized agents
+    # Register all 7 specialized agents
     ingestion = IngestionAgent()
     metrics = MetricsAgent()
+    context = ContextAgent()
     narrative = NarrativeAgent()
     persona = PersonaAgent()
     translator = TranslatorAgent()
@@ -31,10 +33,12 @@ async def test_full_6_agent_pipeline():
 
     orchestrator.register_agent(ingestion)
     orchestrator.register_agent(metrics)
+    orchestrator.register_agent(context)
     orchestrator.register_agent(narrative)
     orchestrator.register_agent(persona)
     orchestrator.register_agent(translator)
     orchestrator.register_agent(factcheck)
+
 
     verified_outputs = []
 
@@ -106,7 +110,8 @@ async def test_rest_api_endpoints():
             assert res_agents.status_code == 200
             agents_data = res_agents.json()
             assert "agents" in agents_data
-            assert agents_data["agent_count"] >= 6
+            assert agents_data["agent_count"] >= 7
+
 
             # 3. Broadcast overlay endpoint
             res_overlay = await client.get("/overlay?match_id=test_match")

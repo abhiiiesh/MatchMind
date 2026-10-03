@@ -1,0 +1,42 @@
+{
+  "teams": {
+    "Arsenal": {
+      "stadium": "Emirates Stadium",
+      "win_rate_leading_at_halftime": 84.6,
+      "comeback_win_rate_trailing_at_halftime": 18.2,
+      "goals_conceded_per_match": 0.76,
+      "set_piece_goals_scored_pct": 32.4,
+      "tactical_profile": "Rigid 3-2-4-1 in possession, high-press suffocation with deepest PPDA (8.9) in England",
+      "historical_trends": [
+        "Arsenal win 84.6% of Premier League games when leading at half-time over the last 3 seasons",
+        "Boast the best defensive record from open play across Europe's top 5 leagues (0.58 xGA per 90)",
+        "Have scored 21 goals from dead-ball corner situations under set-piece coach Nicolas Jover"
+      ]
+    },
+    "Liverpool": {
+      "stadium": "Anfield",
+      "win_rate_leading_at_halftime": 88.1,
+      "comeback_win_rate_trailing_at_halftime": 26.5,
+      "goals_conceded_per_match": 1.05,
+      "goals_scored_final_15_mins": 29,
+      "tactical_profile": "Direct vertical transition engine, furious counter-press, dominant wide half-space overloads",
+      "historical_trends": [
+        "Scored 29 goals in the final 15 minutes of matches, the most clutch late-game record in the league",
+        "Recovered 28 points from losing positions in the 2023-24 season, leading the entire league",
+        "Unbeaten in 94% of Premier League fixtures when scoring the opening goal at Anfield"
+      ]
+    },
+    "Manchester City": {
+      "stadium": "Etihad Stadium",
+      "win_rate_leading_at_halftime": 92.4,
+      "comeback_win_rate_trailing_at_halftime": 22.0,
+      "goals_conceded_per_match": 0.88,
+      "possession_average": 66.8,
+      "tactical_profile": "Positional play mastery, 70%+ territory suffocations, patient central penetration",
+      "historical_trends": [
+        "Unbeaten in their last 34 Premier League fixtures played between February and May",
+        "Average 66.8% possession, suffocating opposing counter-attacks through tactical rest-defense"
+      ]
+    }
+  }
+}
