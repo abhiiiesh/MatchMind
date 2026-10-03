@@ -54,6 +54,11 @@ class Settings(BaseSettings):
     azure_translator_endpoint: str = "https://api.cognitive.microsofttranslator.com/"
 
     @property
+    def has_azure_speech(self) -> bool:
+        """Check if Azure AI Speech credentials are configured."""
+        return bool(self.azure_speech_key and self.azure_speech_region)
+
+    @property
     def has_azure_openai(self) -> bool:
         """Check if Azure OpenAI credentials are configured."""
         return bool(self.azure_openai_endpoint and self.azure_openai_api_key)

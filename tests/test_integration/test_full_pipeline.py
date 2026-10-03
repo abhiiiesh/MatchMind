@@ -136,5 +136,31 @@ async def test_rest_api_endpoints():
             rivalry_data = res_rivalry.json()
             assert "rivalry" in rivalry_data
 
+            # 7. Speech synthesis endpoint
+            res_speech = await client.post(
+                "/api/speech/synthesize",
+                json={
+                    "text": "What a stunning goal by Bukayo Saka!",
+                    "persona": "casual_fan",
+                    "lang": "en",
+                    "leverage_index": 4.5,
+                    "outcome": "Goal",
+                },
+            )
+            assert res_speech.status_code == 200
+            speech_data = res_speech.json()
+            assert "audio_id" in speech_data
+            assert "audio_url" in speech_data
+            assert "ssml" in speech_data
+            assert speech_data["voice_name"] == "en-GB-AlfieNeural"
+
+            # 8. Audio stream playback endpoint
+            audio_id = speech_data["audio_id"]
+            res_audio = await client.get(f"/api/speech/audio/{audio_id}")
+            assert res_audio.status_code == 200
+            assert "audio" in res_audio.headers.get("content-type", "")
+            assert len(res_audio.content) > 0
+
+
 
 

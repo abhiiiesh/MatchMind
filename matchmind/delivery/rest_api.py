@@ -5,8 +5,11 @@ from contextlib import asynccontextmanager
 from typing import Optional
 from fastapi import FastAPI, Query, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from pydantic import BaseModel, Field
 import structlog
+
+from matchmind.speech.speech_service import speech_service
 
 from data.synthetic.generator import SyntheticMatchGenerator
 from data.synthetic.statsbomb_adapter import StatsBombStreamer
@@ -130,6 +133,39 @@ async def get_rivalry_profile(home_team: str, away_team: str):
     if not rivalry:
         return JSONResponse(status_code=404, content={"error": f"No rivalry record found for {home_team} vs {away_team}"})
     return {"home_team": home_team, "away_team": away_team, "rivalry": rivalry}
+
+
+class SynthesizeRequest(BaseModel):
+    text: str = Field(..., description="Commentary text to synthesize")
+    persona: str = Field("casual_fan", description="Audience persona")
+    lang: str = Field("en", description="Language code (en, es, hi, ar, fr, pt)")
+    leverage_index: float = Field(1.0, description="Match leverage index for emotional prosody")
+    outcome: str = Field("Success", description="Action outcome (Goal, Shot, Pass, etc.)")
+    speaking_rate: Optional[float] = Field(None, description="Optional speaking rate multiplier (0.8 - 1.5)")
+
+
+@app.post("/api/speech/synthesize")
+async def synthesize_speech(req: SynthesizeRequest):
+    """Synthesizes commentary text into neural voice audio via Azure AI Speech with SSML inflection."""
+    result = await speech_service.synthesize(
+        text=req.text,
+        persona=req.persona,
+        lang=req.lang,
+        leverage_index=req.leverage_index,
+        outcome=req.outcome,
+        speaking_rate=req.speaking_rate,
+    )
+    return result
+
+
+@app.get("/api/speech/audio/{audio_id}")
+async def get_audio_stream(audio_id: str):
+    """Streams cached WAV or MP3 audio file."""
+    audio_path = speech_service.get_audio_file(audio_id)
+    if not audio_path or not audio_path.exists():
+        return JSONResponse(status_code=404, content={"error": f"Audio file '{audio_id}' not found"})
+    media_type = "audio/mpeg" if audio_path.suffix == ".mp3" else "audio/wav"
+    return FileResponse(path=str(audio_path), media_type=media_type)
 
 
 @app.post("/api/match/{match_id}/simulate")
