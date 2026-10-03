@@ -95,17 +95,27 @@ uv venv .venv
 uv pip install -r requirements.txt --python .venv\Scripts\python.exe
 ```
 
-### 3. Verify the Pipeline
-Run the multi-agent pipeline verification test:
+### 3. Verify the Pipeline & Run Tests
+Run the integration test suite covering all 6 micro-agents and API endpoints:
 ```bash
-.venv\Scripts\python.exe scripts\test_pipeline.py
+.venv\Scripts\pytest.exe tests\test_integration\test_full_pipeline.py -v
 ```
 
-### 4. Fetch / Test StatsBomb Open Match Data
-Download and cache a real match (4,400+ events) with a single command:
+### 4. Start the Backend API & WebSocket Server
 ```bash
-.venv\Scripts\python.exe scripts\download_statsbomb_sample.py
+.venv\Scripts\python.exe -m uvicorn matchmind.delivery.rest_api:app --reload --port 8000
 ```
+- API Documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Agent Cluster Telemetry: [http://localhost:8000/api/agents/status](http://localhost:8000/api/agents/status)
+- Transparent OBS Broadcast Overlay: [http://localhost:8000/overlay](http://localhost:8000/overlay)
+
+### 5. Launch the React Live Dashboard
+In a second terminal window:
+```bash
+cd frontend
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173) in your browser. Click **"▶ Live Simulation"** to stream match events through the 6-agent cluster with real-time pitch animations and multilingual narratives.
 
 ---
 
@@ -120,15 +130,22 @@ Download and cache a real match (4,400+ events) with a single command:
 │   ├── schemas/              # JSON schemas for inter-agent messages
 │   └── synthetic/            # Synthetic match event generators
 ├── docs/                     # Strategic research, MBA analysis, implementation plan
+├── frontend/                 # React 18 + TypeScript + Tailwind live dashboard
+│   ├── src/components/       # PitchVisualization, MetricsPanel, ExplainabilityCard, LiveFeed
 ├── matchmind/
 │   ├── constants.py          # Coordinates, thresholds, taxonomies
 │   ├── config.py             # Pydantic configuration
 │   ├── models.py             # MatchEvent, MetricState, AgentMessage models
-│   ├── agents/               # Multi-agent implementations (Ingestion, Metrics, etc.)
-│   └── metrics/              # xG, xT, PPDA, Field Tilt analytics engines
+│   ├── agents/               # 6 Micro-Agents (Ingestion, Metrics, Narrative, Persona, Translator, FactChecker)
+│   ├── metrics/              # xG, xT, PPDA, Field Tilt analytics engines
+│   ├── narrative/            # Story arc, causality explainer, persona templates
+│   └── delivery/             # FastAPI REST server, WebSocket manager, OBS overlay
 ├── scripts/
 │   ├── test_pipeline.py      # End-to-end multi-agent test script
+│   ├── test_narrative_pipeline.py # Narrative & persona test script
 │   └── download_statsbomb_sample.py # Open data sample downloader
+└── tests/
+    └── test_integration/     # Pytest end-to-end verification suite
 ```
 
 ---
