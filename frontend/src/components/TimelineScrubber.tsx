@@ -71,7 +71,15 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
               {String(currentMinute).padStart(2, "0")}:{String(currentSecond).padStart(2, "0")}
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-400 border-l border-slate-800 pl-1.5">
-              {currentMinute < 45 ? "1st Half" : currentMinute < 90 ? "2nd Half" : "Stoppage"}
+              {timeline?.current_period === 1
+                ? "1st Half"
+                : timeline?.current_period === 2
+                ? "2nd Half"
+                : currentMinute <= 45
+                ? "1st Half"
+                : currentMinute < 90
+                ? "2nd Half"
+                : "Stoppage"}
             </span>
           </div>
 

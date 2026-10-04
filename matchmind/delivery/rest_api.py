@@ -3,13 +3,16 @@
 import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional
-from fastapi import FastAPI, Query, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import structlog
+
+from matchmind.constants import FanPersona, SUPPORTED_LANGUAGES
 
 from matchmind.speech.speech_service import speech_service
 from matchmind.playback.match_catalog import KeyMoment, MatchSummary, get_match_catalog, get_match
@@ -72,6 +75,7 @@ class TimelineInfoResponse(BaseModel):
     current_index: int = 0
     current_minute: int = 0
     current_second: int = 0
+    current_period: int = 1
     is_playing: bool = False
     speed: float = 1.0
     key_moments: List[KeyMoment] = []
@@ -613,6 +617,19 @@ async def get_overlay(
     lang: str = "en",
 ):
     """Serves the transparent broadcast overlay page for OBS Studio Browser Source."""
+    if not re.match(r"^[a-zA-Z0-9_\-]+$", match_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid match_id format: only alphanumeric characters, underscores, and hyphens allowed",
+        )
+
+    valid_personas = {p.value for p in FanPersona}
+    if persona not in valid_personas:
+        persona = "casual_fan"
+
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = "en"
+
     return HTMLResponse(content=BroadcastOverlayFormatter.render_overlay_html(match_id, persona, lang))
 
 

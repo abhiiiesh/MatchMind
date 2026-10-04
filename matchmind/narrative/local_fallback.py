@@ -343,18 +343,27 @@ class LocalNarrativeEngine:
         # 8. PPDA Claim
         ppda = metric_state.get("rolling_ppda")
         if ppda is not None:
-            claims.append(
-                StructuredClaim(
-                    claim_type=ClaimType.METRIC_PPDA,
-                    subject="Defensive Pressing PPDA",
-                    metric_name="rolling_ppda",
-                    claimed_value=ppda,
-                    ground_truth_value=ppda,
-                    unit="PPDA",
-                    source_event_ids=event_ids,
-                    details="Rolling pressing efficiency PPDA metric",
+            if isinstance(ppda, dict):
+                defending_team = "away" if team_name == metric_state.get("home_team") else "home"
+                val = ppda.get(defending_team) or ppda.get("away") or ppda.get("home")
+            else:
+                try:
+                    val = float(ppda)
+                except (ValueError, TypeError):
+                    val = None
+            if val is not None:
+                claims.append(
+                    StructuredClaim(
+                        claim_type=ClaimType.METRIC_PPDA,
+                        subject="Defensive Pressing PPDA",
+                        metric_name="rolling_ppda",
+                        claimed_value=round(val, 1),
+                        ground_truth_value=round(val, 1),
+                        unit="PPDA",
+                        source_event_ids=event_ids,
+                        details=f"Defending team rolling PPDA is {val:.1f}",
+                    )
                 )
-            )
 
         # 9. Field Tilt Claim
         field_tilt = metric_state.get("field_tilt")

@@ -111,19 +111,28 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right Controls: Language & Simulation Triggers */}
       <div className="flex items-center gap-2.5">
-        {/* Language selector */}
-        <select
-          value={activeLanguage}
-          onChange={(e) => onSelectLanguage(e.target.value as LanguageCode)}
-          className="bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-200 rounded-lg px-2.5 py-1.5 outline-none focus:border-emerald-500 cursor-pointer"
+        {/* Multilingual Commentary Feed & Voice Language Selector */}
+        <div
+          className="flex items-center gap-1.5 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1"
+          title="Controls language for commentary feed, translation agent, and neural text-to-speech audio"
         >
-          <option value="en">🇬🇧 English</option>
-          <option value="es">🇪🇸 Español</option>
-          <option value="hi">🇮🇳 हिन्दी</option>
-          <option value="ar">🇸🇦 العربية</option>
-          <option value="pt">🇧🇷 Português</option>
-          <option value="fr">🇫🇷 Français</option>
-        </select>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+            <span>🎙️</span> Feed:
+          </span>
+          <select
+            value={activeLanguage}
+            onChange={(e) => onSelectLanguage(e.target.value as LanguageCode)}
+            className="bg-transparent text-xs font-semibold text-slate-200 outline-none focus:text-emerald-400 cursor-pointer"
+            aria-label="Commentary Language"
+          >
+            <option value="en" className="bg-slate-900">🇬🇧 English</option>
+            <option value="es" className="bg-slate-900">🇪🇸 Español</option>
+            <option value="hi" className="bg-slate-900">🇮🇳 हिन्दी</option>
+            <option value="ar" className="bg-slate-900">🇸🇦 العربية</option>
+            <option value="pt" className="bg-slate-900">🇧🇷 Português</option>
+            <option value="fr" className="bg-slate-900">🇫🇷 Français</option>
+          </select>
+        </div>
 
         {/* Live Simulation Button */}
         <button

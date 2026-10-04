@@ -86,11 +86,15 @@ class ReplaySession:
         ]
 
         def find_player(team_name: str, player_name: str) -> PlayerInfo:
-            squad = home_squad if team_name == summary.home_team else away_squad
-            for p in squad:
+            primary_squad = home_squad if team_name == summary.home_team else away_squad
+            for p in primary_squad:
                 if player_name.lower() in p.name.lower() or p.name.lower() in player_name.lower():
                     return p
-            return squad[random.randint(1, len(squad) - 1)]
+            secondary_squad = away_squad if team_name == summary.home_team else home_squad
+            for p in secondary_squad:
+                if player_name.lower() in p.name.lower() or p.name.lower() in player_name.lower():
+                    return p
+            return PlayerInfo(id=999, name=player_name)
 
         # Map key moments by minute for deterministic embedding
         moments_by_min: Dict[int, KeyMoment] = {m.minute: m for m in summary.key_moments}
@@ -104,24 +108,26 @@ class ReplaySession:
         while current_time_sec <= summary.duration_minutes * 60:
             minute = current_time_sec // 60
             second = current_time_sec % 60
-            period = 1 if minute < 45 else 2
+            period = 1 if minute <= 45 else 2
             timestamp = f"00:{minute:02d}:{second:02d}.000"
 
             # Check if this minute has an embedded key moment
             if minute in moments_by_min:
                 km = moments_by_min.pop(minute)
+                km_period = getattr(km, "period", 1 if minute <= 45 else 2)
                 km_team = home_team if km.team == summary.home_team else away_team
                 km_player = find_player(km.team, km.player)
 
                 if km.moment_type == "GOAL":
                     goal_x = STATSBOMB_GOAL_LINE_X if km_team == home_team else 0.0
                     goal_y = STATSBOMB_GOAL_CENTER_Y + random.uniform(-2, 2)
+                    is_own_goal = "own goal" in km.description.lower()
                     ev = MatchEvent(
                         index=event_idx,
-                        period=period,
-                        timestamp=timestamp,
-                        minute=minute,
-                        second=second,
+                        period=km_period,
+                        timestamp=f"00:{km.minute:02d}:{km.second:02d}.000" if km.second else timestamp,
+                        minute=km.minute,
+                        second=km.second or second,
                         match_id=summary.match_id,
                         event_type=EventType.SHOT,
                         team=km_team,
@@ -139,6 +145,7 @@ class ReplaySession:
                             "description": km.description,
                             "score_after": km.score_after,
                             "leverage_index": km.leverage_index,
+                            "is_own_goal": is_own_goal,
                         },
                     )
                     events.append(ev)
@@ -151,10 +158,10 @@ class ReplaySession:
                 elif km.moment_type == "RED_CARD":
                     ev = MatchEvent(
                         index=event_idx,
-                        period=period,
-                        timestamp=timestamp,
-                        minute=minute,
-                        second=second,
+                        period=km_period,
+                        timestamp=f"00:{km.minute:02d}:{km.second:02d}.000" if km.second else timestamp,
+                        minute=km.minute,
+                        second=km.second or second,
                         match_id=summary.match_id,
                         event_type=EventType.FOUL_COMMITTED,
                         team=km_team,
@@ -180,10 +187,10 @@ class ReplaySession:
                     goal_x = STATSBOMB_GOAL_LINE_X if km_team == home_team else 0.0
                     ev = MatchEvent(
                         index=event_idx,
-                        period=period,
-                        timestamp=timestamp,
-                        minute=minute,
-                        second=second,
+                        period=km_period,
+                        timestamp=f"00:{km.minute:02d}:{km.second:02d}.000" if km.second else timestamp,
+                        minute=km.minute,
+                        second=km.second or second,
                         match_id=summary.match_id,
                         event_type=EventType.SHOT,
                         team=km_team,
@@ -310,6 +317,7 @@ class ReplaySession:
             "current_index": self.current_index,
             "current_minute": cur_min,
             "current_second": cur_ev.second if cur_ev else 0,
+            "current_period": cur_ev.period if cur_ev else (1 if cur_min <= 45 else 2),
             "is_playing": self.is_playing,
             "speed": self.speed,
             "key_moments": [m.model_dump() for m in self.summary.key_moments],
@@ -341,8 +349,18 @@ class ReplaySession:
 
     async def seek_to_moment(self, moment_id: str) -> Optional[MatchEvent]:
         """Jumps directly to a designated key moment highlight."""
-        if not self.summary:
+        if not self.summary or not self.events:
             return None
+
+        # Prefer direct match by embedded key_moment_id
+        for idx, ev in enumerate(self.events):
+            if ev.metadata and ev.metadata.get("key_moment_id") == moment_id:
+                self.current_index = idx
+                target_event = self.events[self.current_index]
+                if self.orchestrator:
+                    await self._dispatch_event(target_event)
+                logger.info("Seeked replay directly to key moment", moment_id=moment_id, event_idx=idx)
+                return target_event
 
         target_km = next((m for m in self.summary.key_moments if m.id == moment_id), None)
         if not target_km:

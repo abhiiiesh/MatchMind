@@ -4,6 +4,7 @@ Formats explainable match intelligence into machine-readable JSON and
 HTML5 templates optimized for OBS Studio, CasparCG, and vMix.
 """
 
+import html
 from typing import Any, Dict
 
 
@@ -145,11 +146,19 @@ class BroadcastOverlayFormatter:
     </div>
   </div>
 
+  <div id="overlay-config"
+       data-match-id="{html.escape(str(match_id))}"
+       data-persona="{html.escape(str(persona))}"
+       data-lang="{html.escape(str(lang))}"
+       style="display:none;"></div>
+
   <script>
-    const matchId = "{match_id}";
-    const persona = "{persona}";
-    const lang = "{lang}";
-    const wsUrl = `ws://${{window.location.host}}/ws/match/${{matchId}}?persona=${{persona}}&lang=${{lang}}`;
+    const cfgEl = document.getElementById("overlay-config");
+    const matchId = encodeURIComponent(cfgEl ? cfgEl.dataset.matchId : "demo_match");
+    const persona = encodeURIComponent(cfgEl ? cfgEl.dataset.persona : "casual_fan");
+    const lang = encodeURIComponent(cfgEl ? cfgEl.dataset.lang : "en");
+    const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${{wsProto}}//${{window.location.host}}/ws/match/${{matchId}}?persona=${{persona}}&lang=${{lang}}`;
     
     function connect() {{
       const ws = new WebSocket(wsUrl);

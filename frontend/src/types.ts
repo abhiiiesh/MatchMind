@@ -156,6 +156,7 @@ export interface MatchTimelineInfo {
   current_index: number;
   current_minute: number;
   current_second?: number;
+  current_period?: number;
   is_playing: boolean;
   speed: number;
   key_moments: KeyMoment[];

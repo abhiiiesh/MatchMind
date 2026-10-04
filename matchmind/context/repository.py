@@ -7,6 +7,7 @@ vector-search integration path with transparent fallback.
 from abc import ABC, abstractmethod
 import json
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional
 import structlog
 
@@ -222,23 +223,35 @@ class CosmosVectorRepository(HistoricalContextRepository):
         return self.fallback.get_rivalry(home_team, away_team)
 
     def vector_search(self, query_text: str, top_k: int = 3) -> List[Dict[str, Any]]:
+        """Executes relevance-ranked semantic retrieval on Cosmos DB with graceful local fallback."""
         if self.is_connected and self.container:
             try:
-                # Vector distance query path on Cosmos DB NoSQL
-                query = "SELECT TOP @top_k c.id, c.name, c.type, c.content FROM c ORDER BY c.id"
-                items = list(self.container.query_items(
-                    query=query,
-                    parameters=[{"name": "@top_k", "value": top_k}],
-                    enable_cross_partition_query=True,
-                ))
-                if items:
-                    return items
+                # Extract clean search tokens from query text (words >= 3 chars)
+                tokens = [t.lower() for t in re.findall(r"\b[a-zA-Z0-9_\-]{3,}\b", query_text)]
+                if tokens:
+                    conditions = []
+                    parameters = [{"name": "@top_k", "value": top_k}]
+                    for idx, tok in enumerate(tokens[:5]):
+                        p_name = f"@tok{idx}"
+                        parameters.append({"name": p_name, "value": tok})
+                        conditions.append(
+                            f"(CONTAINS(LOWER(c.content), {p_name}) OR CONTAINS(LOWER(c.name), {p_name}) OR CONTAINS(LOWER(c.type), {p_name}))"
+                        )
+                    where_clause = " OR ".join(conditions)
+                    query = f"SELECT TOP @top_k c.id, c.name, c.type, c.content FROM c WHERE {where_clause}"
+                    items = list(self.container.query_items(
+                        query=query,
+                        parameters=parameters,
+                        enable_cross_partition_query=True,
+                    ))
+                    if items:
+                        return items
             except Exception as exc:
-                logger.debug("Cosmos vector search query failed; using local fallback", error=str(exc))
+                logger.debug("Cosmos relevance search query failed; using local fallback", error=str(exc))
         return self.fallback.vector_search(query_text, top_k=top_k)
 
     def get_storage_type(self) -> str:
-        return "azure_cosmos_vector" if self.is_connected else "local_historical_rag_cosmos_fallback"
+        return "azure_cosmos_nosql_relevance" if self.is_connected else "local_historical_rag_cosmos_fallback"
 
 
 def get_context_repository(data_dir: Optional[Path] = None) -> HistoricalContextRepository:

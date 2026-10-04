@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { NarrativeOutput, StructuredClaim } from "../types";
-import { CheckCircle2, AlertTriangle, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
+import { CheckCircle2, AlertTriangle, ShieldCheck, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 
 interface ExplainabilityProps {
   narrative: NarrativeOutput | null;
@@ -185,6 +185,14 @@ export const ExplainabilityCard: React.FC<ExplainabilityProps> = ({
                     <span className="inline-flex items-center gap-0.5 text-emerald-400 text-[10px] font-bold">
                       <CheckCircle2 className="w-3 h-3" />
                       <span>Pass</span>
+                    </span>
+                  ) : claim.status === "unverified" ? (
+                    <span
+                      className="inline-flex items-center gap-0.5 text-amber-400 text-[10px] font-bold"
+                      title={claim.details || "No ground truth available"}
+                    >
+                      <HelpCircle className="w-3 h-3" />
+                      <span>Unverified</span>
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-0.5 text-rose-400 text-[10px] font-bold">

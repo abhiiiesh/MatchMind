@@ -145,7 +145,8 @@ class FactCheckerAgent(BaseAgent):
                         c.status = ClaimStatus.VIOLATION
                         violations.append(f"Invalid xG value format: {c.claimed_value}")
                 else:
-                    c.status = ClaimStatus.VERIFIED
+                    c.status = ClaimStatus.UNVERIFIED
+                    c.details = "Ground truth xG telemetry unavailable for verification"
 
             elif c.claim_type == ClaimType.METRIC_XT:
                 c.ground_truth_value = round(actual_xt, 3) if actual_xt is not None else None
@@ -164,7 +165,8 @@ class FactCheckerAgent(BaseAgent):
                         c.status = ClaimStatus.VIOLATION
                         violations.append(f"Invalid xT format: {c.claimed_value}")
                 else:
-                    c.status = ClaimStatus.VERIFIED
+                    c.status = ClaimStatus.UNVERIFIED
+                    c.details = "Ground truth xT telemetry unavailable for verification"
 
             elif c.claim_type == ClaimType.METRIC_FIELD_TILT:
                 c.ground_truth_value = round(actual_field_tilt, 1) if actual_field_tilt is not None else None
@@ -183,22 +185,99 @@ class FactCheckerAgent(BaseAgent):
                         c.status = ClaimStatus.VIOLATION
                         violations.append(f"Invalid Field Tilt format: {c.claimed_value}")
                 else:
-                    c.status = ClaimStatus.VERIFIED
+                    c.status = ClaimStatus.UNVERIFIED
+                    c.details = "Ground truth Field Tilt telemetry unavailable for verification"
+
+            elif c.claim_type == ClaimType.METRIC_PPDA:
+                rolling_ppda = metric_state.get("rolling_ppda", {})
+                actual_ppda = None
+                if isinstance(rolling_ppda, dict):
+                    sub = str(c.subject).lower()
+                    if "home" in sub or (actual_team and actual_team.lower() in sub):
+                        actual_ppda = rolling_ppda.get("home")
+                    elif "away" in sub:
+                        actual_ppda = rolling_ppda.get("away")
+                    else:
+                        actual_ppda = rolling_ppda.get("away") or rolling_ppda.get("home")
+                elif isinstance(rolling_ppda, (int, float)):
+                    actual_ppda = float(rolling_ppda)
+
+                c.ground_truth_value = round(actual_ppda, 1) if actual_ppda is not None else None
+                if actual_ppda is not None:
+                    try:
+                        if isinstance(c.claimed_value, dict):
+                            sub = str(c.subject).lower()
+                            if "home" in sub:
+                                claimed_ppda = float(c.claimed_value.get("home", actual_ppda))
+                            elif "away" in sub:
+                                claimed_ppda = float(c.claimed_value.get("away", actual_ppda))
+                            else:
+                                claimed_ppda = float(c.claimed_value.get("away") or c.claimed_value.get("home") or actual_ppda)
+                        else:
+                            claimed_ppda = float(c.claimed_value)
+
+                        if abs(claimed_ppda - actual_ppda) <= 1.5:
+                            c.status = ClaimStatus.VERIFIED
+                            c.details = f"PPDA metric verified: claimed={claimed_ppda:.1f}, actual={actual_ppda:.1f}"
+                        else:
+                            c.status = ClaimStatus.VIOLATION
+                            msg = f"PPDA metric hallucination: claimed {claimed_ppda:.1f}, actual is {actual_ppda:.1f}"
+                            c.details = msg
+                            violations.append(msg)
+                    except (ValueError, TypeError):
+                        c.status = ClaimStatus.VIOLATION
+                        violations.append(f"Invalid PPDA format: {c.claimed_value}")
+                else:
+                    c.status = ClaimStatus.UNVERIFIED
+                    c.details = "Ground truth PPDA telemetry unavailable for verification"
 
             elif c.claim_type == ClaimType.HISTORICAL_MILESTONE:
                 if historical_context and historical_context.get("has_milestone"):
-                    actual_milestone = historical_context.get("milestone_alert")
+                    actual_milestone = str(historical_context.get("milestone_alert") or "")
                     c.ground_truth_value = actual_milestone
-                    c.status = ClaimStatus.VERIFIED
-                    c.details = f"Milestone verified against historical RAG: {actual_milestone}"
+                    claimed_val_str = str(c.claimed_value).lower()
+                    subject_str = str(c.subject).lower()
+                    actual_ms_lower = actual_milestone.lower()
+
+                    # Stopwords to ignore in milestone matching
+                    generic_words = {"premier", "league", "match", "game", "appearance", "appearances", "goal", "goals", "assist", "assists", "club", "season", "first", "record", "100th", "50th"}
+
+                    # Subject must match (e.g., player or entity named in claim)
+                    subject_tokens = [t for t in subject_str.split() if len(t) > 2 and t not in generic_words]
+                    subject_matched = any(st in actual_ms_lower for st in subject_tokens) if subject_tokens else (subject_str in actual_ms_lower)
+
+                    # Distinctive tokens in claimed value
+                    distinctive_tokens = [t for t in claimed_val_str.split() if len(t) > 2 and t not in generic_words]
+                    distinctive_matches = [t for t in distinctive_tokens if t in actual_ms_lower]
+
+                    if subject_matched and (distinctive_matches or len(distinctive_tokens) == 0):
+                        c.status = ClaimStatus.VERIFIED
+                        c.details = f"Milestone verified against historical RAG: {actual_milestone}"
+                    else:
+                        c.status = ClaimStatus.VIOLATION
+                        msg = f"Historical milestone mismatch: claimed '{c.claimed_value}', RAG record is '{actual_milestone}'"
+                        c.details = msg
+                        violations.append(msg)
                 else:
                     c.status = ClaimStatus.VIOLATION
-                    msg = f"Unsubstantiated historical milestone claim: '{c.claimed_value}'"
+                    msg = f"Unsubstantiated historical milestone claim: '{c.claimed_value}' (no milestone in context)"
                     c.details = msg
                     violations.append(msg)
 
+            elif c.claim_type == ClaimType.TACTICAL_CAUSALITY:
+                lev = metric_state.get("current_leverage_index")
+                mom = metric_state.get("momentum_direction")
+                if lev is not None or mom is not None:
+                    c.ground_truth_value = f"Leverage: {lev}, Momentum: {mom}"
+                    c.status = ClaimStatus.VERIFIED
+                    c.details = "Tactical causality substantiated by leverage index and momentum telemetry"
+                else:
+                    c.status = ClaimStatus.UNVERIFIED
+                    c.details = "No leverage or momentum telemetry available to substantiate causality claim"
+
             else:
-                c.status = ClaimStatus.VERIFIED
+                c.status = ClaimStatus.UNVERIFIED
+                c.details = f"Claim type '{c.claim_type}' has no automated ground-truth verifier configured"
 
             verified_claims.append(c)
 
