@@ -133,6 +133,7 @@ export const App: React.FC = () => {
     setMatchId(newMatchId);
     setFeedMessages([]);
     setCurrentEvent(null);
+    setMetrics(null);
     setLatestNarrative(null);
     setFocusedPlayer(null);
     try {
@@ -282,8 +283,8 @@ export const App: React.FC = () => {
         <div className="lg:col-span-7 flex flex-col gap-4">
           <PitchVisualization
             currentEvent={currentEvent}
-            homeTeamName={metrics?.home_team ?? timeline?.home_team ?? "Arsenal"}
-            awayTeamName={metrics?.away_team ?? timeline?.away_team ?? "Liverpool"}
+            homeTeamName={timeline?.home_team ?? metrics?.home_team ?? "Arsenal"}
+            awayTeamName={timeline?.away_team ?? metrics?.away_team ?? "Liverpool"}
             focusedPlayer={focusedPlayer}
             onSelectPlayer={setFocusedPlayer}
             matchId={matchId}
@@ -305,16 +306,16 @@ export const App: React.FC = () => {
               focusedPlayerName={focusedPlayer}
               currentEvent={currentEvent}
               onClearFocus={() => setFocusedPlayer(null)}
-              homeTeamName={metrics?.home_team ?? timeline?.home_team ?? "Arsenal"}
-              awayTeamName={metrics?.away_team ?? timeline?.away_team ?? "Liverpool"}
+              homeTeamName={timeline?.home_team ?? metrics?.home_team ?? "Arsenal"}
+              awayTeamName={timeline?.away_team ?? metrics?.away_team ?? "Liverpool"}
               activePersona={activePersona}
             />
           )}
 
           <MomentumGraph
             metrics={metrics}
-            homeTeamName={metrics?.home_team ?? timeline?.home_team ?? "Arsenal"}
-            awayTeamName={metrics?.away_team ?? timeline?.away_team ?? "Liverpool"}
+            homeTeamName={timeline?.home_team ?? metrics?.home_team ?? "Arsenal"}
+            awayTeamName={timeline?.away_team ?? metrics?.away_team ?? "Liverpool"}
           />
           <MetricsPanel metrics={metrics} />
         </div>
