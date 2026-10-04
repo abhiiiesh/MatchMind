@@ -237,6 +237,7 @@ class TranslatorAgent(BaseAgent):
                 "narrative": narrative_dict,
                 "event": payload.get("event"),
                 "metric_state": payload.get("metric_state"),
+                "historical_context": payload.get("historical_context"),
             },
             metadata=message.metadata,
         )

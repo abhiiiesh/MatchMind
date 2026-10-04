@@ -150,8 +150,8 @@ class AzureOpenAIClient:
             ppda=ppda,
             leverage_index=leverage,
             historical_context=historical_nugget,
+            outcome=outcome,
         )
-
 
         analyst = LocalNarrativeEngine.generate_persona_commentary(
             persona=FanPersona.TACTICAL_ANALYST,
@@ -213,6 +213,12 @@ class AzureOpenAIClient:
             action_xt=action_xt,
         )
 
+        claims = LocalNarrativeEngine.extract_structured_claims(
+            event=evt,
+            metric_state=ms,
+            historical_context=hist_ctx,
+        )
+
         return {
             "game_state_arc": ms.get("momentum_direction", "balanced").replace("_", " ").title(),
             "why_it_matters": why_matters,
@@ -220,5 +226,6 @@ class AzureOpenAIClient:
             "casual_commentary": casual,
             "commentator_commentary": commentator,
             "accessibility_commentary": accessibility,
+            "structured_claims": [c.model_dump() for c in claims],
         }
 

@@ -38,7 +38,104 @@ class SyntheticMatchGenerator:
         self.home_players = self._generate_squad(self.home_team)
         self.away_players = self._generate_squad(self.away_team)
 
+    REAL_SQUADS: Dict[str, List[tuple]] = {
+        "Arsenal": [
+            ("David Raya", 22, "Goalkeeper"),
+            ("Ben White", 4, "Right Back"),
+            ("William Saliba", 2, "Center Back"),
+            ("Gabriel Magalhães", 6, "Center Back"),
+            ("Oleksandr Zinchenko", 35, "Left Back"),
+            ("Declan Rice", 41, "Defensive Midfield"),
+            ("Martin Ødegaard", 8, "Central Midfield"),
+            ("Kai Havertz", 29, "Central Midfield"),
+            ("Bukayo Saka", 7, "Right Wing"),
+            ("Gabriel Jesus", 9, "Striker"),
+            ("Gabriel Martinelli", 11, "Left Wing"),
+        ],
+        "Liverpool": [
+            ("Alisson Becker", 1, "Goalkeeper"),
+            ("Trent Alexander-Arnold", 66, "Right Back"),
+            ("Ibrahima Konaté", 5, "Center Back"),
+            ("Virgil van Dijk", 4, "Center Back"),
+            ("Andrew Robertson", 26, "Left Back"),
+            ("Wataru Endo", 3, "Defensive Midfield"),
+            ("Alexis Mac Allister", 10, "Central Midfield"),
+            ("Dominik Szoboszlai", 8, "Central Midfield"),
+            ("Mohamed Salah", 11, "Right Wing"),
+            ("Darwin Núñez", 9, "Striker"),
+            ("Luis Díaz", 7, "Left Wing"),
+        ],
+        "Manchester City": [
+            ("Ederson", 31, "Goalkeeper"),
+            ("Kyle Walker", 2, "Right Back"),
+            ("Rúben Dias", 3, "Center Back"),
+            ("Manuel Akanji", 25, "Center Back"),
+            ("Joško Gvardiol", 24, "Left Back"),
+            ("Rodri", 16, "Defensive Midfield"),
+            ("Kevin De Bruyne", 17, "Central Midfield"),
+            ("Bernardo Silva", 20, "Central Midfield"),
+            ("Phil Foden", 47, "Right Wing"),
+            ("Erling Haaland", 9, "Striker"),
+            ("Jack Grealish", 10, "Left Wing"),
+        ],
+        "Chelsea": [
+            ("Robert Sánchez", 1, "Goalkeeper"),
+            ("Reece James", 24, "Right Back"),
+            ("Axel Disasi", 2, "Center Back"),
+            ("Levi Colwill", 26, "Center Back"),
+            ("Ben Chilwell", 21, "Left Back"),
+            ("Moisés Caicedo", 25, "Defensive Midfield"),
+            ("Enzo Fernández", 8, "Central Midfield"),
+            ("Conor Gallagher", 23, "Central Midfield"),
+            ("Cole Palmer", 20, "Right Wing"),
+            ("Nicolas Jackson", 15, "Striker"),
+            ("Raheem Sterling", 7, "Left Wing"),
+        ],
+        "Tottenham Hotspur": [
+            ("Guglielmo Vicario", 13, "Goalkeeper"),
+            ("Pedro Porro", 23, "Right Back"),
+            ("Cristian Romero", 17, "Center Back"),
+            ("Micky van de Ven", 37, "Center Back"),
+            ("Destiny Udogie", 38, "Left Back"),
+            ("Yves Bissouma", 8, "Defensive Midfield"),
+            ("Pape Matar Sarr", 29, "Central Midfield"),
+            ("James Maddison", 10, "Central Midfield"),
+            ("Dejan Kulusevski", 21, "Right Wing"),
+            ("Son Heung-min", 7, "Striker"),
+            ("Brennan Johnson", 22, "Left Wing"),
+        ],
+        "Newcastle United": [
+            ("Nick Pope", 22, "Goalkeeper"),
+            ("Kieran Trippier", 2, "Right Back"),
+            ("Fabian Schär", 5, "Center Back"),
+            ("Sven Botman", 4, "Center Back"),
+            ("Dan Burn", 33, "Left Back"),
+            ("Bruno Guimarães", 39, "Defensive Midfield"),
+            ("Sean Longstaff", 36, "Central Midfield"),
+            ("Joelinton", 7, "Central Midfield"),
+            ("Miguel Almirón", 24, "Right Wing"),
+            ("Alexander Isak", 14, "Striker"),
+            ("Anthony Gordon", 10, "Left Wing"),
+        ],
+    }
+
     def _generate_squad(self, team: TeamInfo) -> List[PlayerInfo]:
+        # Check if known Premier League squad exists
+        for team_key, roster in self.REAL_SQUADS.items():
+            if team_key.lower() in team.name.lower() or team.name.lower() in team_key.lower():
+                squad = []
+                for idx, (p_name, jersey, pos) in enumerate(roster, start=1):
+                    squad.append(
+                        PlayerInfo(
+                            id=team.id * 100 + idx,
+                            name=p_name,
+                            jersey_number=jersey,
+                            position=pos,
+                        )
+                    )
+                return squad
+
+        # Positional fallback for custom/synthetic club names
         positions = [
             ("GK", "Goalkeeper"),
             ("RB", "Right Back"),

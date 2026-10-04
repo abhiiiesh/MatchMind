@@ -83,8 +83,10 @@ class NarrativeAgent(BaseAgent):
             "draft_analyst": narrative_result.get("analyst_commentary", ""),
             "draft_casual": narrative_result.get("casual_commentary", ""),
             "draft_commentator": narrative_result.get("commentator_commentary", ""),
+            "structured_claims": narrative_result.get("structured_claims", []),
             "metric_state": metric_dict,
             "event": event,
+            "historical_context": historical_context,
         }
 
         out_message = AgentMessage(

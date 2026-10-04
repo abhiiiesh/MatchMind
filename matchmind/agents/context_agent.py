@@ -2,7 +2,7 @@
 
 Enriches raw match telemetry and tactical metrics with deep historical intelligence
 (player career milestones, head-to-head records, situational comeback trends)
-using Azure Cosmos DB vector search and local high-performance RAG.
+using local historical RAG with an Azure Cosmos DB vector-search integration path.
 """
 
 from typing import List, Optional

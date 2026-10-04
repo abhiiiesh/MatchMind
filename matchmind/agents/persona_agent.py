@@ -7,7 +7,7 @@ Tactical Analyst, Casual Fan, Broadcast Commentator, and Accessible Audio.
 from typing import Dict, List
 from matchmind.agents.base_agent import BaseAgent
 from matchmind.constants import FanPersona
-from matchmind.models import AgentMessage, NarrativeOutput
+from matchmind.models import AgentMessage, NarrativeOutput, StructuredClaim
 
 
 class PersonaAgent(BaseAgent):
@@ -52,6 +52,11 @@ class PersonaAgent(BaseAgent):
             FanPersona.ACCESSIBILITY_AUDIO: accessibility_commentary,
         }
 
+        claims_raw = payload.get("structured_claims", [])
+        structured_claims = [
+            StructuredClaim(**c) if isinstance(c, dict) else c for c in claims_raw
+        ]
+
         narrative_output = NarrativeOutput(
             match_id=message.match_id,
             event_index=message.event_index,
@@ -61,6 +66,7 @@ class PersonaAgent(BaseAgent):
             why_it_matters_explanation=why_it_matters,
             commentary_by_persona=commentary_map,
             verified_by_factcheck=False,
+            structured_claims=structured_claims,
         )
 
 
@@ -75,6 +81,7 @@ class PersonaAgent(BaseAgent):
                 "narrative": narrative_output.model_dump(),
                 "event": event,
                 "metric_state": metric_dict,
+                "historical_context": payload.get("historical_context"),
             },
             metadata={"leverage_index": leverage},
         )

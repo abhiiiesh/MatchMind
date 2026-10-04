@@ -80,12 +80,16 @@ async def main():
     generator = SyntheticMatchGenerator(home_team_name="Arsenal", away_team_name="Liverpool")
     events = generator.generate_match(total_events=12)
 
-    # Inject high-profile stars for RAG milestone triggers
+    # Inject high-profile stars for RAG milestone triggers with full team & ID integrity
     if len(events) >= 6:
-        events[2].player.name = "Bukayo Saka"
+        # Bukayo Saka (Arsenal)
+        events[2].player = [p for p in generator.home_players if "Saka" in p.name][0]
+        events[2].team = generator.home_team
         events[2].event_type = "Shot"
         events[2].outcome = "Goal"
-        events[5].player.name = "Mohamed Salah"
+        # Mohamed Salah (Liverpool)
+        events[5].player = [p for p in generator.away_players if "Salah" in p.name][0]
+        events[5].team = generator.away_team
         events[5].event_type = "Shot"
         events[5].outcome = "Goal"
 
