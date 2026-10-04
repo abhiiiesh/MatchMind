@@ -27,6 +27,30 @@ class SportsLocalizationEngine:
             "TACTICAL ANALYSIS": "ANÁLISIS TÁCTICO",
             "Big chance": "¡Gran ocasión!",
             "brilliant play": "jugada magistral",
+            "Brilliant save! The keeper denies": "¡Parada colosal! El arquero le niega el gol a",
+            "Heart in mouth moment for": "¡Momento de máxima tensión para la afición de",
+            "supporters!": "!",
+            "Massive block!": "¡Bloqueo heroico!",
+            "shoots but it's charged down at": "remató pero la defensa interceptó con todo al minuto",
+            "Off target from": "Disparo desviado de",
+            "Had time to pick a spot at": "Tenía espacio para definir al minuto",
+            "converted a high-probability opportunity": "convirtió una ocasión de alta probabilidad",
+            "forced a crucial save from the goalkeeper": "exigió una estirada providencial del guardameta",
+            "had the shot blocked by the retreating defensive line": "vio su disparo bloqueado por la zaga replegada",
+            "attempted a strike": "probó un potente remate",
+            "but fired off target": "pero el balón se marchó desviado",
+            "rattled the woodwork": "¡hizo temblar el poste rival!",
+            "A backward recycling pass under tactical pressure": "Pase de seguridad hacia atrás ante la presión rival",
+            "High-intensity defensive intervention by": "Intervención defensiva de alta intensidad por",
+            "Part of a coordinated counter-press": "Parte de una presión tras pérdida coordinada",
+            "Defensive containment by": "Contención defensiva estructurada por",
+            "AND IT'S IN!": "¡Y VA PARA ADENTRO!",
+            "breaks through in the": "rompe el cerrojo defensivo en el",
+            "A seismic goal that makes it": "Un gol de época que coloca el marcador",
+            "Terrific stop! The goalkeeper gets down well to turn aside": "¡Paradón de reflejos! El arquero desvía el remate de",
+            "Charged down!": "¡Tiro bloqueado en el área!",
+            "High and wide!": "¡Por encima del larguero!",
+            "Tactical phase at minute": "Fase táctica en el minuto",
             "progressive ball": "pase progresivo entre líneas",
             "great movement": "gran desplazamiento táctico",
             "Field Tilt": "Inclinación de Campo (Field Tilt)",
@@ -216,6 +240,15 @@ class TranslatorAgent(BaseAgent):
 
 
         translations: Dict[str, str] = {"en": primary_text}
+        translations_by_persona: Dict[str, Dict[str, str]] = {}
+
+        for p_key, p_text in commentary_map.items():
+            if not p_text:
+                continue
+            p_str = str(p_key.value if hasattr(p_key, "value") else p_key)
+            translations_by_persona[p_str] = {"en": p_text}
+            for lang in self.target_languages:
+                translations_by_persona[p_str][lang] = SportsLocalizationEngine.translate_phrase(p_text, lang)
 
         for lang in self.target_languages:
             azure_translated = await self._translate_with_azure(primary_text, lang)
@@ -225,6 +258,7 @@ class TranslatorAgent(BaseAgent):
                 translations[lang] = SportsLocalizationEngine.translate_phrase(primary_text, lang)
 
         narrative_dict["translations"] = translations
+        narrative_dict["translations_by_persona"] = translations_by_persona
 
         out_message = AgentMessage(
             source_agent=self.agent_id,

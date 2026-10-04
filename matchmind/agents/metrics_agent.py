@@ -35,6 +35,7 @@ class MetricsAgent(BaseAgent):
         self.momentum_engine = MomentumEngine(window_minutes=5)
 
         # Rolling internal state
+        self.active_match_id: Optional[str] = None
         self.home_team_name: Optional[str] = None
         self.away_team_name: Optional[str] = None
         self.score = {"home": 0, "away": 0}
@@ -43,6 +44,19 @@ class MetricsAgent(BaseAgent):
         self.final_third_passes = {"home": 0, "away": 0}
         self.pass_counts = {"home": 0, "away": 0}
 
+    def reset(self, match_id: Optional[str] = None) -> None:
+        """Resets all metrics state cleanly for a new match or replay sequence."""
+        self.active_match_id = match_id
+        self.home_team_name = None
+        self.away_team_name = None
+        self.score = {"home": 0, "away": 0}
+        self.cumulative_xg = {"home": 0.0, "away": 0.0}
+        self.cumulative_xt = {"home": 0.0, "away": 0.0}
+        self.final_third_passes = {"home": 0, "away": 0}
+        self.pass_counts = {"home": 0, "away": 0}
+        self.pressing_engine = PressingEngine(window_minutes=5)
+        self.momentum_engine = MomentumEngine(window_minutes=5)
+        self.log.info("MetricsAgent state reset", match_id=match_id)
 
     def _determine_teams(self, event: MatchEvent) -> None:
         """Establish home vs away identities dynamically."""
@@ -67,6 +81,9 @@ class MetricsAgent(BaseAgent):
         payload = message.payload
         event_dict = payload.get("event")
         event = MatchEvent(**event_dict)
+
+        if self.active_match_id != event.match_id:
+            self.reset(event.match_id)
 
         self._determine_teams(event)
         is_home = (event.team.name == self.home_team_name)

@@ -1,5 +1,6 @@
 import React from "react";
 import type { LanguageCode, MatchSummary, PersonaType } from "../types";
+import { apiUrl } from "../api";
 
 interface HeaderProps {
   activePersona: PersonaType;
@@ -148,7 +149,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Open OBS Overlay in new window */}
         <a
-          href={`http://localhost:8000/overlay?match_id=${matchId}&persona=${activePersona}&lang=${activeLanguage}`}
+          href={apiUrl(`/overlay?match_id=${matchId}&persona=${activePersona}&lang=${activeLanguage}`)}
           target="_blank"
           rel="noreferrer"
           className="text-xs text-slate-400 hover:text-emerald-400 font-semibold border border-slate-800 hover:border-emerald-500/50 px-2.5 py-1.5 rounded-lg transition-all"

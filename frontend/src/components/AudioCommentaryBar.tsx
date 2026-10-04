@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { LanguageCode, NarrativeOutput, PersonaType } from "../types";
 import { Volume2, VolumeX, Play, Pause, Radio, Headphones, Sparkles, Code2, X } from "lucide-react";
+import { apiUrl } from "../api";
 
 interface AudioCommentaryBarProps {
   latestNarrative: NarrativeOutput | null;
@@ -72,7 +73,7 @@ export const AudioCommentaryBar: React.FC<AudioCommentaryBarProps> = ({
 
     if (useAzureEngine) {
       // Call Azure Neural Speech Backend
-      fetch("http://localhost:8000/api/speech/synthesize", {
+      fetch(apiUrl("/api/speech/synthesize"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -91,7 +92,7 @@ export const AudioCommentaryBar: React.FC<AudioCommentaryBarProps> = ({
 
             // Play via HTML5 Audio element
             if (audioRef.current && data.audio_url) {
-              audioRef.current.src = `http://localhost:8000${data.audio_url}`;
+              audioRef.current.src = apiUrl(data.audio_url);
               audioRef.current.play().catch(() => {
                 // Autoplay may be restricted in some browsers
               });

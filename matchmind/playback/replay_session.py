@@ -282,6 +282,19 @@ class ReplaySession:
             }
 
         cur_ev = self.events[self.current_index] if 0 <= self.current_index < len(self.events) else None
+        cur_min = cur_ev.minute if cur_ev else 0
+
+        # Accurately compute score at the current replay minute
+        cur_home = 0
+        cur_away = 0
+        if self.summary:
+            for km in self.summary.key_moments:
+                if km.moment_type == "GOAL" and km.minute <= cur_min:
+                    if km.team == self.summary.home_team:
+                        cur_home += 1
+                    else:
+                        cur_away += 1
+
         return {
             "match_id": self.summary.match_id,
             "title": self.summary.title,
@@ -291,10 +304,11 @@ class ReplaySession:
             "home_badge_color": self.summary.home_badge_color,
             "away_badge_color": self.summary.away_badge_color,
             "final_score": self.summary.final_score,
+            "current_score": {"home": cur_home, "away": cur_away},
             "duration_minutes": self.summary.duration_minutes,
             "total_events": len(self.events),
             "current_index": self.current_index,
-            "current_minute": cur_ev.minute if cur_ev else 0,
+            "current_minute": cur_min,
             "current_second": cur_ev.second if cur_ev else 0,
             "is_playing": self.is_playing,
             "speed": self.speed,

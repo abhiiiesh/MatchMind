@@ -6,6 +6,7 @@ import type {
   PitchOverlayMode,
   PressureZoneData,
 } from "../types";
+import { apiUrl } from "../api";
 
 interface PitchProps {
   currentEvent: MatchEvent | null;
@@ -48,23 +49,29 @@ export const PitchVisualization: React.FC<PitchProps> = ({
         if (overlayMode === "heatmap") {
           const playerParam = focusedPlayer ? `&player=${encodeURIComponent(focusedPlayer)}` : "";
           const res = await fetch(
-            `http://localhost:8000/api/match/${matchId}/spatial/heatmap?team=${encodeURIComponent(
-              selectedTeam
-            )}${playerParam}`
+            apiUrl(
+              `/api/match/${matchId}/spatial/heatmap?team=${encodeURIComponent(
+                selectedTeam
+              )}${playerParam}`
+            )
           );
           if (res.ok) setHeatmapData(await res.json());
         } else if (overlayMode === "pass_network") {
           const res = await fetch(
-            `http://localhost:8000/api/match/${matchId}/spatial/pass_network?team=${encodeURIComponent(
-              selectedTeam
-            )}`
+            apiUrl(
+              `/api/match/${matchId}/spatial/pass_network?team=${encodeURIComponent(
+                selectedTeam
+              )}`
+            )
           );
           if (res.ok) setPassNetworkData(await res.json());
         } else if (overlayMode === "pressing") {
           const res = await fetch(
-            `http://localhost:8000/api/match/${matchId}/spatial/pressure_zones?team=${encodeURIComponent(
-              selectedTeam
-            )}`
+            apiUrl(
+              `/api/match/${matchId}/spatial/pressure_zones?team=${encodeURIComponent(
+                selectedTeam
+              )}`
+            )
           );
           if (res.ok) setPressureData(await res.json());
         }

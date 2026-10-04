@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { MatchEvent, PersonaType } from "../types";
 import { User, Award, X, Sparkles, Trophy } from "lucide-react";
+import { apiUrl } from "../api";
 
 interface PlayerFocusCardProps {
   focusedPlayerName: string | null;
@@ -39,7 +40,7 @@ export const PlayerFocusCard: React.FC<PlayerFocusCardProps> = ({
     }
 
     let isMounted = true;
-    fetch(`http://localhost:8000/api/rag/player/${encodeURIComponent(focusedPlayerName)}`)
+    fetch(apiUrl(`/api/rag/player/${encodeURIComponent(focusedPlayerName)}`))
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (isMounted && data?.profile) {

@@ -75,13 +75,19 @@ export const TimelineScrubber: React.FC<TimelineScrubberProps> = ({
             </span>
           </div>
 
-          {timeline?.final_score && (
-            <div className="text-xs font-bold text-slate-300 bg-slate-950/80 border border-slate-800/80 px-2 py-1 rounded-md flex items-center gap-1.5">
-              <span>{timeline.home_team}</span>
-              <span className="text-emerald-400 font-mono font-black">
-                {timeline.final_score.home} - {timeline.final_score.away}
+          {timeline && (
+            <div className="text-xs font-bold text-slate-300 bg-slate-950/80 border border-slate-800/80 px-2.5 py-1 rounded-md flex items-center gap-2">
+              <span className="text-slate-300">{timeline.home_team}</span>
+              <span className="text-emerald-400 font-mono font-black text-sm">
+                {timeline.current_score?.home ?? 0} - {timeline.current_score?.away ?? 0}
               </span>
-              <span>{timeline.away_team}</span>
+              <span className="text-slate-300">{timeline.away_team}</span>
+              <span
+                className="text-[10px] text-slate-500 font-semibold bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800"
+                title="Full-time fixture outcome"
+              >
+                FT {timeline.final_score.home}-{timeline.final_score.away}
+              </span>
             </div>
           )}
         </div>

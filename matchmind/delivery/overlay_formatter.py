@@ -161,21 +161,29 @@ class BroadcastOverlayFormatter:
           const ms = p.metric_state || {{}};
           const score = ms.score || {{ home: 0, away: 0 }};
           
-          document.getElementById("clock").innerText = `${{ms.minute || 0}}'`;
-          document.getElementById("teams").innerText = `${{ms.home_team || 'Home'}} vs ${{ms.away_team || 'Away'}}`;
-          document.getElementById("score").innerText = `${{score.home}} - ${{score.away}}`;
+          document.getElementById("clock").textContent = `${{ms.minute || 0}}'`;
+          document.getElementById("teams").textContent = `${{ms.home_team || 'Home'}} vs ${{ms.away_team || 'Away'}}`;
+          document.getElementById("score").textContent = `${{score.home}} - ${{score.away}}`;
           
           const commentaryText = (n.translations && n.translations[lang]) 
             ? n.translations[lang] 
             : (n.commentary_by_persona && n.commentary_by_persona[persona]) || "";
           
-          document.getElementById("commentary").innerText = commentaryText;
-          document.getElementById("why-box").innerHTML = `💡 <b>Why It Matters:</b> ${{n.why_it_matters_explanation || ''}}`;
+          document.getElementById("commentary").textContent = commentaryText;
+
+          const whyBox = document.getElementById("why-box");
+          whyBox.textContent = "";
+          const whyLabel = document.createElement("b");
+          whyLabel.textContent = "💡 Why It Matters: ";
+          whyBox.appendChild(whyLabel);
+          const whyText = document.createElement("span");
+          whyText.textContent = n.why_it_matters_explanation || "";
+          whyBox.appendChild(whyText);
           
           const xgHome = (ms.cumulative_xg && ms.cumulative_xg.home) ? ms.cumulative_xg.home.toFixed(2) : "0.00";
           const xgAway = (ms.cumulative_xg && ms.cumulative_xg.away) ? ms.cumulative_xg.away.toFixed(2) : "0.00";
-          document.getElementById("xg-pill").innerText = `xG: ${{xgHome}} - ${{xgAway}}`;
-          document.getElementById("tilt-pill").innerText = `Field Tilt: ${{ms.field_tilt || 50}}%`;
+          document.getElementById("xg-pill").textContent = `xG: ${{xgHome}} - ${{xgAway}}`;
+          document.getElementById("tilt-pill").textContent = `Field Tilt: ${{ms.field_tilt || 50}}%`;
         }}
       }};
       ws.onclose = () => setTimeout(connect, 2000);

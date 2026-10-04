@@ -51,6 +51,27 @@ export interface MetricState {
 }
 
 
+export interface StructuredClaim {
+  claim_id: string;
+  claim_type: string;
+  subject: string;
+  claimed_value: any;
+  ground_truth_value?: any;
+  status: "verified" | "violation" | "unverified" | string;
+  confidence: number;
+  source_event_ids: number[];
+  details: string;
+}
+
+export interface VerificationSummary {
+  passed: boolean;
+  total_claims: number;
+  verified_count: number;
+  violation_count: number;
+  violations: string[];
+  claims: StructuredClaim[];
+}
+
 export interface NarrativeOutput {
   narrative_id: string;
   match_id: string;
@@ -63,6 +84,8 @@ export interface NarrativeOutput {
   translations: Record<string, string>;
   verified_by_factcheck: boolean;
   factcheck_notes?: string;
+  structured_claims?: StructuredClaim[];
+  verification_summary?: VerificationSummary;
 }
 
 export interface VerifiedMessagePayload {
@@ -127,6 +150,7 @@ export interface MatchTimelineInfo {
   home_badge_color: string;
   away_badge_color: string;
   final_score: { home: number; away: number };
+  current_score?: { home: number; away: number };
   duration_minutes: number;
   total_events: number;
   current_index: number;

@@ -204,7 +204,16 @@ class SpatialAnalyticsEngine:
         events: List[MatchEvent],
         team: Optional[str] = None,
     ) -> Dict:
-        """Categorizes defensive pressing actions into pitch thirds."""
+        """Categorizes authentic defensive pressing actions into pitch thirds.
+
+        Definitions:
+        - total_pressures: Count of genuine defensive actions (Pressure, Tackle, Interception, Duel, Recovery, Block).
+        - high_press_attacking_third: Defensive actions with start_x >= 80.0 (opponent defensive 1/3).
+        - mid_block_middle_third: Defensive actions with 40.0 <= start_x < 80.0 (middle 1/3).
+        - low_block_defensive_third: Defensive actions with start_x < 40.0 (own defensive 1/3).
+        - high_press_actions: Explicit list of defensive actions executed at start_x >= 80.0.
+          (Ordinary passes or shots under pressure are strictly excluded).
+        """
         defensive_types = {
             "pressure",
             "tackle",
@@ -212,12 +221,15 @@ class SpatialAnalyticsEngine:
             "foul committed",
             "duel",
             "ball recovery",
+            "block",
+            "counterpress",
         }
 
         attacking_third = 0  # x >= 80 (High Press)
         middle_third = 0     # 40 <= x < 80 (Mid Block)
         defensive_third = 0  # x < 40 (Low Block)
         high_press_points = []
+        under_pressure_possession_actions = 0
 
         for ev in events:
             if ev.start_x is None or ev.start_y is None:
@@ -226,10 +238,13 @@ class SpatialAnalyticsEngine:
             if team and team.lower() not in p_team.lower():
                 continue
 
-            ev_type = ev.event_type.lower()
-            is_defensive = ev_type in defensive_types or ev.under_pressure
+            # Track possession under pressure separately
+            if ev.under_pressure:
+                under_pressure_possession_actions += 1
 
-            if is_defensive:
+            ev_type = ev.event_type.lower()
+            # Strictly defensive actions apply to pressure zones
+            if ev_type in defensive_types:
                 x = ev.start_x
                 y = ev.start_y
                 if x >= 80.0:
@@ -249,10 +264,16 @@ class SpatialAnalyticsEngine:
         total = attacking_third + middle_third + defensive_third
         high_press_pct = round((attacking_third / total) * 100, 1) if total > 0 else 0.0
 
+        # Response-level consistency checks
+        assert attacking_third + middle_third + defensive_third == total, "Pressure zone breakdown sum must match total"
+        assert all(p["x"] >= 80.0 for p in high_press_points), "High press actions must have x >= 80.0"
+        assert all(p["type"].lower() in defensive_types for p in high_press_points), "High press actions must be defensive events"
+
         return {
             "team": team or "All",
             "total_pressures": total,
             "high_press_pct": high_press_pct,
+            "actions_under_pressure_faced": under_pressure_possession_actions,
             "breakdown": {
                 "high_press_attacking_third": attacking_third,
                 "mid_block_middle_third": middle_third,

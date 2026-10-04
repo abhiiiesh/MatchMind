@@ -25,16 +25,38 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
     }
   }, [messages]);
 
-  const getCommentaryText = (msg: VerifiedMessagePayload): string => {
+  const getCommentary = (
+    msg: VerifiedMessagePayload
+  ): { text: string; isTranslated: boolean; langBadge: string } => {
     const narrative = msg.narrative;
-    if (activeLanguage !== "en" && narrative.translations && narrative.translations[activeLanguage]) {
-      return narrative.translations[activeLanguage];
+    const personaText =
+      narrative.commentary_by_persona?.[activePersona] ||
+      narrative.commentary_by_persona?.["broadcast_commentator"] ||
+      narrative.why_it_matters_explanation ||
+      "";
+
+    if (activeLanguage === "en") {
+      return { text: personaText, isTranslated: true, langBadge: "EN" };
     }
-    return (
-      narrative.commentary_by_persona[activePersona] ||
-      narrative.commentary_by_persona["broadcast_commentator"] ||
-      ""
-    );
+
+    // Check persona-specific translation if available
+    const personaTranslations = (narrative as any).translations_by_persona?.[activePersona];
+    if (personaTranslations && personaTranslations[activeLanguage]) {
+      const trans = personaTranslations[activeLanguage];
+      if (trans && trans !== personaText) {
+        return { text: trans, isTranslated: true, langBadge: activeLanguage.toUpperCase() };
+      }
+    }
+
+    // Fall back to general translations
+    if (narrative.translations && narrative.translations[activeLanguage]) {
+      const trans = narrative.translations[activeLanguage];
+      if (trans && trans !== personaText) {
+        return { text: trans, isTranslated: true, langBadge: activeLanguage.toUpperCase() };
+      }
+    }
+
+    return { text: personaText, isTranslated: false, langBadge: "EN (Pending)" };
   };
 
   return (
@@ -47,9 +69,14 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
             Live Intelligence Stream
           </span>
         </div>
-        <span className="text-xs text-slate-400 font-medium">
-          {messages.length} events logged
-        </span>
+        <div className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+          {activeLanguage !== "en" && (
+            <span className="bg-slate-800 border border-slate-700 text-slate-300 px-1.5 py-0.5 rounded text-[10px] font-mono uppercase">
+              Target: {activeLanguage}
+            </span>
+          )}
+          <span>{messages.length} events logged</span>
+        </div>
       </div>
 
       {/* Scrolling Content */}
@@ -61,7 +88,7 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
         ) : (
           messages.map((msg, idx) => {
             const isGoal = msg.event.outcome === "Goal";
-            const text = getCommentaryText(msg);
+            const { text, isTranslated, langBadge } = getCommentary(msg);
             const playerName = msg.event.player?.name;
 
             return (
@@ -93,6 +120,22 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
                       >
                         👤 {playerName}
                       </button>
+                    )}
+                    {activeLanguage !== "en" && (
+                      <span
+                        className={`text-[9px] font-mono px-1.5 py-0.2 rounded font-bold uppercase border ${
+                          isTranslated
+                            ? "bg-emerald-950/60 text-emerald-300 border-emerald-500/30"
+                            : "bg-amber-950/60 text-amber-300 border-amber-500/30"
+                        }`}
+                        title={
+                          isTranslated
+                            ? `Commentary translated to ${activeLanguage}`
+                            : "Translation unavailable; displaying original English"
+                        }
+                      >
+                        {langBadge}
+                      </span>
                     )}
                   </div>
 
