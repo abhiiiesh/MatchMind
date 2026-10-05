@@ -164,3 +164,52 @@ def test_historical_rag_has_city_chelsea_rivalry_and_profiles(client):
     p2_res = client.get("/api/rag/player/Cole Palmer")
     assert p2_res.status_code == 200
     assert p2_res.json()["profile"]["team"] == "Chelsea"
+
+
+def test_live_to_replay_transition_score_and_spanish_narrative(client):
+    """Explicitly verifies that transitioning from live simulation to replay seek preserves exact score and localizes narrative."""
+    from matchmind.delivery.rest_api import orchestrator
+
+    # 1. Simulate a live match run where Chelsea already scored
+    metrics_agent = orchestrator.agents.get("metrics_agent")
+    if metrics_agent:
+        metrics_agent.reset("mancity_chelsea_2024")
+        metrics_agent.score = {"home": 0, "away": 1}
+
+    # 2. Switch to replay and seek to Sterling's 42' goal highlight
+    seek_res = client.post(
+        "/api/match/mancity_chelsea_2024/seek",
+        json={"moment_id": "m2_42"},
+    )
+    assert seek_res.status_code == 200
+    seek_data = seek_res.json()
+
+    # Score in seek response MUST be 0 - 1 (not 0 - 2 from double counting)
+    assert seek_data["metric_state"]["score"] == {"home": 0, "away": 1}
+    assert seek_data["timeline"]["current_score"] == {"home": 0, "away": 1}
+
+    # 3. State endpoint and timeline endpoint MUST agree exactly
+    state_res = client.get("/api/match/mancity_chelsea_2024/state")
+    assert state_res.status_code == 200
+    state_data = state_res.json()
+    assert state_data["score"] == {"home": 0, "away": 1}
+
+    timeline_res = client.get("/api/match/mancity_chelsea_2024/timeline")
+    assert timeline_res.status_code == 200
+    timeline_data = timeline_res.json()
+    assert timeline_data["current_score"] == {"home": 0, "away": 1}
+    assert state_data["score"] == timeline_data["current_score"]
+
+    # 4. Spanish localization for Sterling 42' highlight must be culturally authentic Spanish
+    narrative = seek_data["narrative"]
+    assert "es" in narrative["translations"]
+    es_text = narrative["translations"]["es"]
+    assert "¡Devastador contragolpe del Chelsea!" in es_text
+    assert "Sterling" in es_text
+    assert "Devastating Chelsea break:" not in es_text  # Must not remain English
+
+    # 5. Persona-specific tactical analyst review must be localized in Spanish
+    tactical_es = narrative["translations_by_persona"]["tactical_analyst"]["es"]
+    assert "[ANÁLISIS TÁCTICO | 42']" in tactical_es
+    assert "¡Devastador contragolpe del Chelsea!" in tactical_es
+

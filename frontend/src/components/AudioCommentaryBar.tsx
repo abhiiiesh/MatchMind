@@ -58,16 +58,20 @@ export const AudioCommentaryBar: React.FC<AudioCommentaryBarProps> = ({
 
     // Pick text based on language and persona
     let textToSpeak = "";
-    if (activeLanguage !== "en" && latestNarrative.translations?.[activeLanguage]) {
-      textToSpeak = latestNarrative.translations[activeLanguage];
-    } else if (useAccessibilityAudio) {
-      textToSpeak =
-        latestNarrative.commentary_by_persona?.accessibility_audio ||
-        latestNarrative.why_it_matters_explanation;
-    } else {
-      textToSpeak =
-        latestNarrative.commentary_by_persona?.[activePersona] ||
-        latestNarrative.why_it_matters_explanation;
+    if (activeLanguage !== "en") {
+      const personaTrans = (latestNarrative as any).translations_by_persona?.[activePersona]?.[activeLanguage];
+      textToSpeak = personaTrans || latestNarrative.translations?.[activeLanguage] || "";
+    }
+    if (!textToSpeak) {
+      if (useAccessibilityAudio) {
+        textToSpeak =
+          latestNarrative.commentary_by_persona?.accessibility_audio ||
+          latestNarrative.why_it_matters_explanation;
+      } else {
+        textToSpeak =
+          latestNarrative.commentary_by_persona?.[activePersona] ||
+          latestNarrative.why_it_matters_explanation;
+      }
     }
 
     if (!textToSpeak) return;

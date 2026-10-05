@@ -426,9 +426,10 @@ class ReplaySession:
             self.is_playing = False
 
     async def _dispatch_event(self, event: MatchEvent) -> None:
-        """Publishes RAW_EVENT to orchestrator."""
+        """Publishes RAW_EVENT to orchestrator with deterministic replay score."""
         if not self.orchestrator:
             return
+        cur_score = self.get_timeline_info().get("current_score", {"home": 0, "away": 0})
         raw_msg = AgentMessage(
             source_agent="replay_engine",
             target_agents=["ingestion_agent"],
@@ -436,7 +437,8 @@ class ReplaySession:
             event_index=event.index,
             match_minute=event.minute,
             message_type="RAW_EVENT",
-            payload={"event": event.model_dump()},
+            payload={"event": event.model_dump(), "replay_score": cur_score},
+            metadata={"replay_score": cur_score, "is_replay": True},
         )
         await self.orchestrator.publish(raw_msg)
 

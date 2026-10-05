@@ -61,6 +61,7 @@ class IngestionAgent(BaseAgent):
         elif event.start_x is not None and event.start_y is not None:
             is_box_entry = event.start_x >= 102.0 and 18.0 <= event.start_y <= 62.0
 
+        replay_score = message.payload.get("replay_score") or (message.metadata.get("replay_score") if message.metadata else None)
         normalized_payload = {
             "event": event.model_dump(),
             "coordinates_meters": {
@@ -70,7 +71,13 @@ class IngestionAgent(BaseAgent):
             "is_attacking_third": (event.start_x or 0.0) >= 80.0,
             "is_box_entry": is_box_entry,
         }
+        if replay_score is not None:
+            normalized_payload["replay_score"] = replay_score
 
+        out_metadata = dict(message.metadata or {})
+        out_metadata["ingested_at_ms"] = message.timestamp.isoformat()
+        if replay_score is not None:
+            out_metadata["replay_score"] = replay_score
 
         out_message = AgentMessage(
             source_agent=self.agent_id,
@@ -80,7 +87,7 @@ class IngestionAgent(BaseAgent):
             match_minute=event.minute,
             message_type="NORMALIZED_EVENT",
             payload=normalized_payload,
-            metadata={"ingested_at_ms": message.timestamp.isoformat()},
+            metadata=out_metadata,
         )
 
         return [out_message]

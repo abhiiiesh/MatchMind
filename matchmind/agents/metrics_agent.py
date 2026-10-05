@@ -95,6 +95,8 @@ class MetricsAgent(BaseAgent):
         action_xt = None
         is_goal = False
 
+        replay_score = payload.get("replay_score") or (message.metadata.get("replay_score") if message.metadata else None)
+
         # 1. Shot Event Analysis (xG)
         if event.event_type == EventType.SHOT:
             raw_xg = event.metadata.get("shot_statsbomb_xg")
@@ -105,14 +107,26 @@ class MetricsAgent(BaseAgent):
                     under_pressure=event.under_pressure,
                     precomputed_xg=raw_xg,
                 )
-                self.cumulative_xg[team_key] = round(self.cumulative_xg[team_key] + action_xg, 2)
+                if replay_score is not None:
+                    self.cumulative_xg[team_key] = round(action_xg, 2)
+                    self.cumulative_xg[opp_key] = 0.0
+                else:
+                    self.cumulative_xg[team_key] = round(self.cumulative_xg[team_key] + action_xg, 2)
 
             if event.outcome == "Goal":
                 is_goal = True
-                self.score[team_key] += 1
+                if replay_score is None:
+                    self.score[team_key] += 1
         elif event.event_type in [EventType.GOAL, "Goal"]:
             is_goal = True
-            self.score[team_key] += 1
+            if replay_score is None:
+                self.score[team_key] += 1
+
+        if replay_score is not None:
+            self.score = {
+                "home": int(replay_score.get("home", 0)),
+                "away": int(replay_score.get("away", 0)),
+            }
 
         # 2. Pass / Progression Analysis (xT & Field Tilt)
         if event.event_type == EventType.PASS:

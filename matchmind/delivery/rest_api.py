@@ -248,6 +248,9 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 
+_active_simulation_tasks: Dict[str, asyncio.Task] = {}
+
+
 @app.get("/api/health", response_model=HealthResponse)
 async def health_check():
     """Health check and platform status endpoint."""
@@ -332,13 +335,20 @@ async def get_match_state(match_id: str):
         return JSONResponse(status_code=404, content={"error": f"No active state found for match {match_id}"})
 
     # If state exists, ensure teams and score adhere to the fixture summary when in replay context
-    if summary and (state.home_team != summary.home_team or state.away_team != summary.away_team):
-        state.home_team = summary.home_team
-        state.away_team = summary.away_team
-        if replay_session.active_match_id == match_id:
+    if summary:
+        updated = False
+        if state.home_team != summary.home_team or state.away_team != summary.away_team:
+            state.home_team = summary.home_team
+            state.away_team = summary.away_team
+            updated = True
+        if replay_session.active_match_id == match_id and replay_session.events:
             timeline_info = replay_session.get_timeline_info()
-            state.score = timeline_info.get("current_score", {"home": 0, "away": 0})
-        orchestrator.update_match_state(match_id, state)
+            cur_score = timeline_info.get("current_score")
+            if cur_score and state.minute == timeline_info.get("current_minute") and state.score != cur_score:
+                state.score = cur_score
+                updated = True
+        if updated:
+            orchestrator.update_match_state(match_id, state)
 
     return state
 
@@ -472,7 +482,12 @@ async def start_simulation(
             await asyncio.sleep(delay_seconds)
         logger.info("Completed simulation stream", match_id=match_id)
 
-    asyncio.create_task(run_sim())
+    if match_id in _active_simulation_tasks and not _active_simulation_tasks[match_id].done():
+        _active_simulation_tasks[match_id].cancel()
+
+    sim_task = asyncio.create_task(run_sim())
+    _active_simulation_tasks[match_id] = sim_task
+
     return {
         "status": "simulation_started",
         "match_id": match_id,
@@ -503,6 +518,9 @@ async def get_timeline(match_id: str):
 @app.post("/api/match/{match_id}/select", response_model=MatchSelectResponse)
 async def select_match(match_id: str):
     """Switches the active match and dispatches the opening kickoff event."""
+    if match_id in _active_simulation_tasks and not _active_simulation_tasks[match_id].done():
+        _active_simulation_tasks[match_id].cancel()
+
     metrics_agent = orchestrator.agents.get("metrics_agent")
     if metrics_agent and hasattr(metrics_agent, "reset"):
         metrics_agent.reset(match_id)
@@ -581,12 +599,21 @@ async def seek_timeline(match_id: str, req: SeekRequest):
     if not ev:
         return JSONResponse(status_code=404, content={"error": "Target moment or minute could not be reached"})
 
+    # Stop any running background simulation stream for this match
+    if match_id in _active_simulation_tasks and not _active_simulation_tasks[match_id].done():
+        _active_simulation_tasks[match_id].cancel()
+
     timeline_info = replay_session.get_timeline_info()
     cur_score = timeline_info.get("current_score", {"home": 0, "away": 0})
     home_name = replay_session.summary.home_team if replay_session.summary else "Home"
     away_name = replay_session.summary.away_team if replay_session.summary else "Away"
     lev_idx = ev.metadata.get("leverage_index", 1.0) if ev.metadata else 1.0
     action_xg = ev.metadata.get("shot_statsbomb_xg") if ev.metadata else None
+
+    # Synchronize registered MetricsAgent score with current replay timeline score
+    metrics_agent = orchestrator.agents.get("metrics_agent")
+    if metrics_agent and hasattr(metrics_agent, "score"):
+        metrics_agent.score = dict(cur_score)
 
     # Sync MetricState to seeked instant
     m_state = MetricState(
