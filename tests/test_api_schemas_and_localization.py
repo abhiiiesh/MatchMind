@@ -16,7 +16,8 @@ from matchmind.agents.translator_agent import SportsLocalizationEngine
 
 @pytest.fixture
 def client():
-    return TestClient(app)
+    with TestClient(app) as c:
+        yield c
 
 
 def test_api_matches_schema_matches_response_model(client):
@@ -95,3 +96,71 @@ def test_sports_localization_engine_hindi():
     hi = SportsLocalizationEngine.translate_phrase(phrase, "hi")
     assert "शानदार गोल!!" in hi
     assert "समर्थकों के लिए क्या ऐतिहासिक क्षण है!" in hi
+
+
+def test_simulation_uses_selected_fixture_teams(client):
+    """Verifies that simulation for City vs Chelsea seeds correct teams in match state."""
+    res = client.post("/api/match/mancity_chelsea_2024/simulate?source=synthetic&events_count=10&delay_seconds=0.05")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "simulation_started"
+    assert data["match_id"] == "mancity_chelsea_2024"
+
+    state_res = client.get("/api/match/mancity_chelsea_2024/state")
+    assert state_res.status_code == 200
+    state_data = state_res.json()
+    assert state_data["home_team"] == "Manchester City"
+    assert state_data["away_team"] == "Chelsea"
+
+
+def test_match_state_synchronized_with_selected_and_seeked_fixture(client):
+    """Verifies that match state is synchronized with replay selection and seek position."""
+    # 1. Select match
+    sel_res = client.post("/api/match/mancity_chelsea_2024/select")
+    assert sel_res.status_code == 200
+    state_res = client.get("/api/match/mancity_chelsea_2024/state")
+    assert state_res.status_code == 200
+    state = state_res.json()
+    assert state["home_team"] == "Manchester City"
+    assert state["away_team"] == "Chelsea"
+
+    # 2. Seek to moment m2_42 (Chelsea goal at 42')
+    seek_res = client.post(
+        "/api/match/mancity_chelsea_2024/seek",
+        json={"moment_id": "m2_42"},
+    )
+    assert seek_res.status_code == 200
+    seek_data = seek_res.json()
+    assert seek_data["metric_state"]["score"] == {"home": 0, "away": 1}
+    assert seek_data["metric_state"]["home_team"] == "Manchester City"
+    assert seek_data["metric_state"]["away_team"] == "Chelsea"
+
+    # 3. Query state endpoint directly and verify it reflects the seeked instant
+    state_after_seek = client.get("/api/match/mancity_chelsea_2024/state").json()
+    assert state_after_seek["home_team"] == "Manchester City"
+    assert state_after_seek["away_team"] == "Chelsea"
+    assert state_after_seek["score"] == {"home": 0, "away": 1}
+
+    # 4. Verify multilingual translations in seek narrative
+    narrative = seek_data["narrative"]
+    assert "translations" in narrative
+    assert "es" in narrative["translations"]
+    assert len(narrative["translations"]["es"]) > 0
+    assert "translations_by_persona" in narrative
+
+
+def test_historical_rag_has_city_chelsea_rivalry_and_profiles(client):
+    """Verifies that Historical RAG provides profiles and rivalry records for City and Chelsea."""
+    riv_res = client.get("/api/rag/rivalry/Manchester City/Chelsea")
+    assert riv_res.status_code == 200
+    riv_data = riv_res.json()
+    assert "rivalry" in riv_data
+    assert "Manchester City" in riv_data["home_team"]
+
+    p1_res = client.get("/api/rag/player/Erling Haaland")
+    assert p1_res.status_code == 200
+    assert p1_res.json()["profile"]["team"] == "Manchester City"
+
+    p2_res = client.get("/api/rag/player/Cole Palmer")
+    assert p2_res.status_code == 200
+    assert p2_res.json()["profile"]["team"] == "Chelsea"

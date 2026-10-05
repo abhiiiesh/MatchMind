@@ -46,6 +46,39 @@
         "Title races decided by single-point margins in 2018-19 and 2021-22",
         "Fixtures average the highest tactical pressing intensity (combined PPDA under 8.5) in Europe"
       ]
+    },
+    "Manchester City_vs_Chelsea": {
+      "fixture_title": "Manchester City vs Chelsea",
+      "total_meetings": 178,
+      "head_to_head": {
+        "Manchester City_wins": 65,
+        "Chelsea_wins": 71,
+        "draws": 42
+      },
+      "goals_per_game_avg": 2.76,
+      "recent_form_last_5": "Manchester City: 3W, 2D, 0L",
+      "historical_narrative": "A high-stakes tactical clash between City's relentless positional possession and Chelsea's rapid counter-attacking transitions.",
+      "key_matchup_factors": [
+        "Chelsea's counter-press generates 2.1 big chances per match against City's high line",
+        "Rodri and De Bruyne dominate the central half-spaces with over 78% progressive pass accuracy",
+        "Recent encounters have averaged over 3.2 combined goals per 90"
+      ]
+    },
+    "Tottenham Hotspur_vs_Newcastle United": {
+      "fixture_title": "Tottenham Hotspur vs Newcastle United",
+      "total_meetings": 170,
+      "head_to_head": {
+        "Tottenham_wins": 74,
+        "Newcastle_wins": 62,
+        "draws": 34
+      },
+      "goals_per_game_avg": 3.25,
+      "recent_form_last_5": "Newcastle: 3W, 0D, 2L",
+      "historical_narrative": "An explosive high-tempo Premier League matchup known for chaotic momentum swings and heavy pressing.",
+      "key_matchup_factors": [
+        "Fixtures between these two sides average 3.25 goals per game",
+        "Both teams favor intense pressing, creating rapid turnovers in the middle third"
+      ]
     }
   }
 }

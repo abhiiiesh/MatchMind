@@ -29,7 +29,7 @@ from matchmind.agents.narrative_agent import NarrativeAgent
 
 from matchmind.agents.orchestrator import AgentOrchestrator
 from matchmind.agents.persona_agent import PersonaAgent
-from matchmind.agents.translator_agent import TranslatorAgent
+from matchmind.agents.translator_agent import SportsLocalizationEngine, TranslatorAgent
 from matchmind.config import settings
 from matchmind.delivery.overlay_formatter import BroadcastOverlayFormatter
 from matchmind.delivery.websocket_server import manager
@@ -291,8 +291,55 @@ async def get_agent_status():
 async def get_match_state(match_id: str):
     """Returns the current rolling tactical metrics for a match."""
     state = orchestrator.get_match_state(match_id)
+    summary = get_match(match_id)
+
     if not state:
+        if summary:
+            # Check if replay session has active state for this match
+            if replay_session.active_match_id == match_id and replay_session.events:
+                cur_ev = replay_session.events[replay_session.current_index]
+                timeline_info = replay_session.get_timeline_info()
+                cur_score = timeline_info.get("current_score", {"home": 0, "away": 0})
+                cur_xg = cur_ev.metadata.get("shot_statsbomb_xg", 0.0) if cur_ev.metadata else 0.0
+                state = MetricState(
+                    match_id=match_id,
+                    minute=cur_ev.minute,
+                    home_team=summary.home_team,
+                    away_team=summary.away_team,
+                    score=cur_score,
+                    cumulative_xg={"home": cur_xg if cur_ev.team.name == summary.home_team else 0.0, "away": cur_xg if cur_ev.team.name == summary.away_team else 0.0},
+                    rolling_ppda={"home": 11.5, "away": 11.5},
+                    field_tilt=50.0,
+                    possession_pct={"home": 50.0, "away": 50.0},
+                    current_leverage_index=cur_ev.metadata.get("leverage_index", 1.0) if cur_ev.metadata else 1.0,
+                )
+                orchestrator.update_match_state(match_id, state)
+                return state
+            else:
+                state = MetricState(
+                    match_id=match_id,
+                    minute=0,
+                    home_team=summary.home_team,
+                    away_team=summary.away_team,
+                    score={"home": 0, "away": 0},
+                    cumulative_xg={"home": 0.0, "away": 0.0},
+                    rolling_ppda={"home": 11.5, "away": 11.5},
+                    field_tilt=50.0,
+                    possession_pct={"home": 50.0, "away": 50.0},
+                )
+                orchestrator.update_match_state(match_id, state)
+                return state
         return JSONResponse(status_code=404, content={"error": f"No active state found for match {match_id}"})
+
+    # If state exists, ensure teams and score adhere to the fixture summary when in replay context
+    if summary and (state.home_team != summary.home_team or state.away_team != summary.away_team):
+        state.home_team = summary.home_team
+        state.away_team = summary.away_team
+        if replay_session.active_match_id == match_id:
+            timeline_info = replay_session.get_timeline_info()
+            state.score = timeline_info.get("current_score", {"home": 0, "away": 0})
+        orchestrator.update_match_state(match_id, state)
+
     return state
 
 
@@ -366,17 +413,49 @@ async def start_simulation(
     if metrics_agent and hasattr(metrics_agent, "reset"):
         metrics_agent.reset(match_id)
 
+    summary = get_match(match_id)
+    if summary:
+        home_name = summary.home_team
+        away_name = summary.away_team
+    else:
+        parts = match_id.split("_")
+        team_map = {
+            "arsenal": "Arsenal",
+            "liverpool": "Liverpool",
+            "mancity": "Manchester City",
+            "city": "Manchester City",
+            "chelsea": "Chelsea",
+            "tottenham": "Tottenham Hotspur",
+            "spurs": "Tottenham Hotspur",
+            "newcastle": "Newcastle United",
+        }
+        home_name = team_map.get(parts[0].lower(), parts[0].capitalize()) if len(parts) >= 2 else "Arsenal"
+        away_name = team_map.get(parts[1].lower(), parts[1].capitalize()) if len(parts) >= 2 else "Liverpool"
+
+    init_state = MetricState(
+        match_id=match_id,
+        minute=0,
+        home_team=home_name,
+        away_team=away_name,
+        score={"home": 0, "away": 0},
+        cumulative_xg={"home": 0.0, "away": 0.0},
+        rolling_ppda={"home": 11.5, "away": 11.5},
+        field_tilt=50.0,
+        possession_pct={"home": 50.0, "away": 50.0},
+    )
+    orchestrator.update_match_state(match_id, init_state)
+
     async def run_sim():
-        logger.info("Starting match simulation", match_id=match_id, source=source, count=events_count)
+        logger.info("Starting match simulation", match_id=match_id, source=source, count=events_count, home_team=home_name, away_team=away_name)
         if source == "statsbomb":
             try:
                 streamer = StatsBombStreamer(match_id=match_id)
                 events = streamer.get_events()[:events_count]
             except Exception:
-                generator = SyntheticMatchGenerator(match_id=match_id)
+                generator = SyntheticMatchGenerator(match_id=match_id, home_team_name=home_name, away_team_name=away_name)
                 events = generator.generate_match(total_events=events_count)
         else:
-            generator = SyntheticMatchGenerator(match_id=match_id)
+            generator = SyntheticMatchGenerator(match_id=match_id, home_team_name=home_name, away_team_name=away_name)
             events = generator.generate_match(total_events=events_count)
 
         for event in events:
@@ -432,6 +511,20 @@ async def select_match(match_id: str):
         summary = replay_session.load_match(match_id)
     except ValueError as exc:
         return JSONResponse(status_code=404, content={"error": str(exc)})
+
+    # Initialize synchronized match state for newly selected fixture
+    init_state = MetricState(
+        match_id=match_id,
+        minute=0,
+        home_team=summary.home_team,
+        away_team=summary.away_team,
+        score={"home": 0, "away": 0},
+        cumulative_xg={"home": 0.0, "away": 0.0},
+        rolling_ppda={"home": 11.5, "away": 11.5},
+        field_tilt=50.0,
+        possession_pct={"home": 50.0, "away": 50.0},
+    )
+    orchestrator.update_match_state(match_id, init_state)
 
     if replay_session.events:
         await replay_session._dispatch_event(replay_session.events[0])
@@ -510,8 +603,25 @@ async def seek_timeline(match_id: str, req: SeekRequest):
         current_leverage_index=lev_idx,
         current_action_xg=action_xg,
     )
+    orchestrator.update_match_state(match_id, m_state)
 
     desc = (ev.metadata.get("description") if ev.metadata else None) or f"{ev.player.name if ev.player else 'Player'} executes {ev.event_type} at {ev.minute}'."
+    commentary_by_persona = {
+        "casual_fan": desc,
+        "tactical_analyst": f"[TACTICAL REVIEW | {ev.minute}'] {desc}",
+        "broadcast_commentator": desc,
+        "accessibility_audio": f"Audio description: {desc}",
+    }
+    translations = {"en": desc}
+    translations_by_persona = {
+        p_name: {"en": p_text}
+        for p_name, p_text in commentary_by_persona.items()
+    }
+    for lang in ["es", "hi", "ar", "pt", "fr"]:
+        translations[lang] = SportsLocalizationEngine.translate_phrase(desc, lang)
+        for p_name, p_text in commentary_by_persona.items():
+            translations_by_persona[p_name][lang] = SportsLocalizationEngine.translate_phrase(p_text, lang)
+
     narrative = {
         "narrative_id": f"seek_{ev.index}",
         "match_id": match_id,
@@ -520,16 +630,9 @@ async def seek_timeline(match_id: str, req: SeekRequest):
         "game_state_arc": "High Stakes Inflection" if lev_idx >= 2.0 else "Controlled Build-Up",
         "leverage_index": lev_idx,
         "why_it_matters_explanation": desc,
-        "commentary_by_persona": {
-            "casual_fan": desc,
-            "tactical_analyst": f"[TACTICAL REVIEW | {ev.minute}'] {desc}",
-            "broadcast_commentator": desc,
-            "accessibility_audio": f"Audio description: {desc}",
-        },
-        "translations": {
-            "en": desc,
-            "es": desc,
-        },
+        "commentary_by_persona": commentary_by_persona,
+        "translations": translations,
+        "translations_by_persona": translations_by_persona,
         "verified_by_factcheck": True,
     }
 

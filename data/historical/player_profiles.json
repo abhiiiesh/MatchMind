@@ -112,6 +112,126 @@
         "Has scored 8 Premier League hat-tricks in under three seasons"
       ],
       "signature_traits": "Unstoppable box-entry acceleration, 0.95 xG conversion inside the 6-yard area"
+    },
+    "Kevin De Bruyne": {
+      "team": "Manchester City",
+      "position": "CAM",
+      "appearances": 260,
+      "goals": 68,
+      "assists": 112,
+      "milestones": [
+        "Ranks #2 in Premier League all-time assists per 90 (0.46)",
+        "Over 100 Premier League career assists"
+      ],
+      "signature_traits": "Elite whipped crosses from right half-space, world-class vision and passing range"
+    },
+    "Rodri": {
+      "team": "Manchester City",
+      "position": "DM",
+      "appearances": 172,
+      "goals": 22,
+      "assists": 21,
+      "milestones": [
+        "Went 74 consecutive matches unbeaten for Manchester City across all competitions",
+        "Completed more passes in the final third than any midfielder in Europe"
+      ],
+      "signature_traits": "Press resistance, tactical foul prevention, venomous clutch strikes from outside the box"
+    },
+    "Phil Foden": {
+      "team": "Manchester City",
+      "position": "RW/CAM",
+      "appearances": 165,
+      "goals": 54,
+      "assists": 26,
+      "milestones": [
+        "Premier League Player of the Season with 19 goals and 8 assists in 2023-24",
+        "Scored 6 goals from outside the box last season"
+      ],
+      "signature_traits": "Nimble close control in tight half-spaces, explosive turn and clinical left-foot finish"
+    },
+    "Cole Palmer": {
+      "team": "Chelsea",
+      "position": "RW/CAM",
+      "appearances": 45,
+      "goals": 25,
+      "assists": 15,
+      "milestones": [
+        "Premier League Young Player of the Season with 22 league goals in 2023-24",
+        "Perfect 9 for 9 penalty record in Premier League action"
+      ],
+      "signature_traits": "Ice-cold finishing composure, creative incisive through-balls from right channel"
+    },
+    "Raheem Sterling": {
+      "team": "Chelsea",
+      "position": "LW",
+      "appearances": 379,
+      "goals": 123,
+      "assists": 62,
+      "milestones": [
+        "Ranks in top 20 all-time Premier League goalscorers",
+        "Has scored 20+ career goals against former clubs"
+      ],
+      "signature_traits": "Rapid change of direction, back-post tap-in anticipation, direct dribbling"
+    },
+    "Nicolas Jackson": {
+      "team": "Chelsea",
+      "position": "CF",
+      "appearances": 38,
+      "goals": 14,
+      "assists": 5,
+      "milestones": [
+        "Scored a Premier League hat-trick away at Tottenham Hotspur",
+        "Averages 3.2 shots per 90 in open play"
+      ],
+      "signature_traits": "Aggressive channel running, physical pressing from front line, link-up play"
+    },
+    "Son Heung-min": {
+      "team": "Tottenham Hotspur",
+      "position": "CF/LW",
+      "appearances": 303,
+      "goals": 120,
+      "assists": 62,
+      "milestones": [
+        "First Asian player to win the Premier League Golden Boot (23 non-penalty goals in 2021-22)",
+        "Over 120 Premier League goals, ranking top 15 in modern era"
+      ],
+      "signature_traits": "Ambidextrous laser finishing from 20+ yards, lethal transition breakaway speed"
+    },
+    "James Maddison": {
+      "team": "Tottenham Hotspur",
+      "position": "CAM",
+      "appearances": 185,
+      "goals": 47,
+      "assists": 41,
+      "milestones": [
+        "Created 75+ chances in 4 consecutive Premier League campaigns",
+        "Leads the league in shot-creating actions per 90 (5.8)"
+      ],
+      "signature_traits": "Dead-ball mastery, deceptive body feints between midfield lines"
+    },
+    "Alexander Isak": {
+      "team": "Newcastle United",
+      "position": "CF",
+      "appearances": 52,
+      "goals": 31,
+      "assists": 4,
+      "milestones": [
+        "Scored 21 Premier League goals in 2023-24, first Newcastle player since Alan Shearer to hit 20+",
+        "Best minutes-per-goal ratio (108 mins) in the division"
+      ],
+      "signature_traits": "Silky dribbling stride, Thierry Henry-style curled far-corner finishes"
+    },
+    "Bruno Guimarães": {
+      "team": "Newcastle United",
+      "position": "CM",
+      "appearances": 86,
+      "goals": 16,
+      "assists": 14,
+      "milestones": [
+        "Won more ground duels (286) than any midfielder in the Premier League",
+        "Most fouled player in European top 5 leagues (108 fouls won)"
+      ],
+      "signature_traits": "Relentless combativity, press-evading 360-degree turns, outside-of-the-boot passing"
     }
   }
 }

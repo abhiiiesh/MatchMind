@@ -18,6 +18,7 @@ export const AudioCommentaryBar: React.FC<AudioCommentaryBarProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [useAccessibilityAudio, setUseAccessibilityAudio] = useState(false);
   const [useAzureEngine, setUseAzureEngine] = useState(true);
+  const [isNeuralAzure, setIsNeuralAzure] = useState<boolean | null>(null);
   const [activeVoiceName, setActiveVoiceName] = useState("en-GB-RyanNeural");
   const [currentSSML, setCurrentSSML] = useState<string | null>(null);
   const [showSSMLModal, setShowSSMLModal] = useState(false);
@@ -89,6 +90,7 @@ export const AudioCommentaryBar: React.FC<AudioCommentaryBarProps> = ({
           if (data) {
             setActiveVoiceName(data.voice_name || "en-GB-RyanNeural");
             setCurrentSSML(data.ssml || null);
+            setIsNeuralAzure(Boolean(data.is_neural_azure));
 
             // Play via HTML5 Audio element
             if (audioRef.current && data.audio_url) {
@@ -190,14 +192,36 @@ export const AudioCommentaryBar: React.FC<AudioCommentaryBarProps> = ({
               <button
                 onClick={() => setUseAzureEngine(!useAzureEngine)}
                 className={`flex items-center gap-1 text-[9px] px-1.5 py-0.2 rounded font-mono font-bold transition-colors ${
-                  useAzureEngine
-                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
-                    : "bg-slate-800 text-slate-400"
+                  !useAzureEngine
+                    ? "bg-slate-800 text-slate-400 border border-slate-700"
+                    : isNeuralAzure === false
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                    : "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40"
                 }`}
-                title="Toggle between Azure Neural TTS and Browser WebSpeech"
+                title={
+                  !useAzureEngine
+                    ? "Browser WebSpeech active"
+                    : isNeuralAzure === false
+                    ? "Local audio synthesizer active (Azure credentials unconfigured)"
+                    : "Azure Neural TTS active"
+                }
               >
-                <Sparkles className="w-2.5 h-2.5 text-cyan-400" />
-                <span>{useAzureEngine ? "Azure Neural" : "Browser TTS"}</span>
+                <Sparkles
+                  className={`w-2.5 h-2.5 ${
+                    !useAzureEngine
+                      ? "text-slate-400"
+                      : isNeuralAzure === false
+                      ? "text-amber-400"
+                      : "text-cyan-400"
+                  }`}
+                />
+                <span>
+                  {!useAzureEngine
+                    ? "Browser TTS"
+                    : isNeuralAzure === false
+                    ? "Local Voice (WAV)"
+                    : "Azure Neural"}
+                </span>
               </button>
             </div>
 
@@ -205,32 +229,39 @@ export const AudioCommentaryBar: React.FC<AudioCommentaryBarProps> = ({
               <span>
                 {useAccessibilityAudio
                   ? "Spatial Audio Description (Accessible)"
+                  : isNeuralAzure === false
+                  ? `Voice: ${activeVoiceName} (Local Fallback)`
                   : `Voice: ${activeVoiceName}`}
               </span>
               {latestNarrative && (
                 <button
                   onClick={async () => {
-                    if (!currentSSML) {
-                      const text =
-                        latestNarrative.commentary_by_persona?.[activePersona] ||
-                        latestNarrative.why_it_matters_explanation;
-                      try {
-                        const res = await fetch("http://localhost:8000/api/speech/synthesize", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            text,
-                            persona: useAccessibilityAudio ? "accessibility_audio" : activePersona,
-                            lang: activeLanguage,
-                            leverage_index: latestNarrative.leverage_index ?? 1.0,
-                            outcome: "Success",
-                          }),
-                        });
+                    const text =
+                      (activeLanguage !== "en" && latestNarrative.translations?.[activeLanguage])
+                        ? latestNarrative.translations[activeLanguage]
+                        : (useAccessibilityAudio
+                            ? (latestNarrative.commentary_by_persona?.accessibility_audio || latestNarrative.why_it_matters_explanation)
+                            : (latestNarrative.commentary_by_persona?.[activePersona] || latestNarrative.why_it_matters_explanation));
+
+                    try {
+                      const res = await fetch(apiUrl("/api/speech/synthesize"), {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          text,
+                          persona: useAccessibilityAudio ? "accessibility_audio" : activePersona,
+                          lang: activeLanguage,
+                          leverage_index: latestNarrative.leverage_index ?? 1.0,
+                          outcome: "Success",
+                        }),
+                      });
+                      if (res.ok) {
                         const data = await res.json();
                         setCurrentSSML(data.ssml || null);
-                      } catch {
-                        // ignore
+                        setIsNeuralAzure(Boolean(data.is_neural_azure));
                       }
+                    } catch {
+                      // ignore
                     }
                     setShowSSMLModal(true);
                   }}

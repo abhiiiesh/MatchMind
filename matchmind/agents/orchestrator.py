@@ -60,6 +60,7 @@ class AgentOrchestrator:
         """Start the orchestrator event loop."""
         if self.is_running:
             return
+        self.message_queue = asyncio.Queue()
         self.is_running = True
         self._worker_task = asyncio.create_task(self._process_loop())
         logger.info("MatchMind Orchestrator started with agents", count=len(self.agents))
@@ -71,8 +72,9 @@ class AgentOrchestrator:
             self._worker_task.cancel()
             try:
                 await self._worker_task
-            except asyncio.CancelledError:
+            except (asyncio.CancelledError, Exception):
                 pass
+            self._worker_task = None
         logger.info("MatchMind Orchestrator stopped")
 
     async def _process_loop(self) -> None:

@@ -17,6 +17,15 @@ interface PitchProps {
   matchId?: string;
 }
 
+const TEAM_ROSTERS: Record<string, string[]> = {
+  Arsenal: ["Bukayo Saka", "Martin Ødegaard", "Declan Rice", "Gabriel Martinelli", "William Saliba"],
+  Liverpool: ["Mohamed Salah", "Virgil van Dijk", "Trent Alexander-Arnold", "Alexis Mac Allister", "Luis Díaz"],
+  "Manchester City": ["Erling Haaland", "Kevin De Bruyne", "Phil Foden", "Rodri", "Bernardo Silva"],
+  Chelsea: ["Cole Palmer", "Raheem Sterling", "Nicolas Jackson", "Enzo Fernández", "Moisés Caicedo"],
+  "Tottenham Hotspur": ["Son Heung-min", "James Maddison", "Dejan Kulusevski", "Cristian Romero", "Pedro Porro"],
+  "Newcastle United": ["Alexander Isak", "Bruno Guimarães", "Anthony Gordon", "Kieran Trippier", "Fabian Schär"],
+};
+
 export const PitchVisualization: React.FC<PitchProps> = ({
   currentEvent,
   homeTeamName,
@@ -27,6 +36,10 @@ export const PitchVisualization: React.FC<PitchProps> = ({
 }) => {
   const [overlayMode, setOverlayMode] = useState<PitchOverlayMode>("standard");
   const [selectedTeam, setSelectedTeam] = useState<string>(homeTeamName);
+
+  const homeRoster = TEAM_ROSTERS[homeTeamName] || [homeTeamName + " Star 1", homeTeamName + " Star 2"];
+  const awayRoster = TEAM_ROSTERS[awayTeamName] || [awayTeamName + " Star 1", awayTeamName + " Star 2"];
+  const focusPlayers = [...homeRoster.slice(0, 3), ...awayRoster.slice(0, 2)];
 
   // Spatial data state
   const [heatmapData, setHeatmapData] = useState<HeatmapData | null>(null);
@@ -382,16 +395,25 @@ export const PitchVisualization: React.FC<PitchProps> = ({
               </g>
             ))}
 
-            {/* Third Labels */}
-            <text x="20" y="8" fill="rgba(255,255,255,0.6)" fontSize="2.6" fontWeight="700" textAnchor="middle">
-              Low Block (Defensive 1/3)
-            </text>
-            <text x="60" y="8" fill="rgba(255,255,255,0.6)" fontSize="2.6" fontWeight="700" textAnchor="middle">
-              Mid Block (Middle 1/3)
-            </text>
-            <text x="100" y="8" fill="#ef4444" fontSize="2.8" fontWeight="800" textAnchor="middle">
-              ⚡ High Press Zone ({pressureData?.high_press_pct ?? 37.3}%)
-            </text>
+            {/* Third Labels with High-Contrast Backdrop Pills */}
+            <g transform="translate(20, 64)">
+              <rect x="-16" y="-3.2" width="32" height="6.4" rx="3.2" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.4)" strokeWidth="0.4" />
+              <text x="0" y="0.8" fill="rgba(255,255,255,0.85)" fontSize="2.2" fontWeight="700" textAnchor="middle">
+                Low Block (Defensive 1/3)
+              </text>
+            </g>
+            <g transform="translate(60, 64)">
+              <rect x="-15" y="-3.2" width="30" height="6.4" rx="3.2" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(148, 163, 184, 0.4)" strokeWidth="0.4" />
+              <text x="0" y="0.8" fill="rgba(255,255,255,0.85)" fontSize="2.2" fontWeight="700" textAnchor="middle">
+                Mid Block (Middle 1/3)
+              </text>
+            </g>
+            <g transform="translate(100, 64)">
+              <rect x="-18" y="-3.2" width="36" height="6.4" rx="3.2" fill="rgba(15, 23, 42, 0.9)" stroke="#ef4444" strokeWidth="0.5" />
+              <text x="0" y="0.8" fill="#f87171" fontSize="2.2" fontWeight="800" textAnchor="middle">
+                ⚡ High Press Zone ({pressureData?.high_press_pct ?? 37.3}%)
+              </text>
+            </g>
           </g>
         )}
 
@@ -515,7 +537,7 @@ export const PitchVisualization: React.FC<PitchProps> = ({
           <span className="text-slate-400 font-semibold uppercase text-[10px] tracking-wider shrink-0 mr-1">
             Focus:
           </span>
-          {["Bukayo Saka", "Martin Ødegaard", "Declan Rice", "Mohamed Salah", "Virgil van Dijk"].map(
+          {focusPlayers.map(
             (p) => (
               <button
                 key={p}

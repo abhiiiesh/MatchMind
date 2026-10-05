@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import type { NarrativeOutput, StructuredClaim } from "../types";
+import type { LanguageCode, NarrativeOutput, StructuredClaim } from "../types";
 import { CheckCircle2, AlertTriangle, ShieldCheck, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 
 interface ExplainabilityProps {
   narrative: NarrativeOutput | null;
+  activeLanguage?: LanguageCode;
   onSelectPlayer?: (playerName: string) => void;
   currentEventPlayerName?: string;
 }
 
 export const ExplainabilityCard: React.FC<ExplainabilityProps> = ({
   narrative,
+  activeLanguage = "en",
   onSelectPlayer,
   currentEventPlayerName,
 }) => {
@@ -24,6 +26,11 @@ export const ExplainabilityCard: React.FC<ExplainabilityProps> = ({
   }
 
   const isHighDrama = narrative.leverage_index >= 3.0;
+
+  // Case-insensitive status helper functions
+  const isVerified = (s?: string) => s?.toLowerCase() === "verified";
+  const isUnverified = (s?: string) => s?.toLowerCase() === "unverified";
+  const isViolation = (s?: string) => s?.toLowerCase() === "violation";
 
   // Extract structured claims or formulate baseline verified claims from telemetry
   const summary = narrative.verification_summary;
@@ -69,8 +76,13 @@ export const ExplainabilityCard: React.FC<ExplainabilityProps> = ({
         ];
 
   const totalClaims = summary?.total_claims || structuredClaims.length;
-  const verifiedCount = summary?.verified_count || structuredClaims.filter((c) => c.status === "verified").length;
-  const hasViolations = (summary?.violation_count || 0) > 0;
+  const verifiedCount = summary?.verified_count ?? structuredClaims.filter((c) => isVerified(c.status)).length;
+  const hasViolations = (summary?.violation_count || 0) > 0 || structuredClaims.some((c) => isViolation(c.status));
+
+  const explanationText =
+    (activeLanguage && activeLanguage !== "en" && narrative.translations?.[activeLanguage])
+      ? narrative.translations[activeLanguage]
+      : narrative.why_it_matters_explanation;
 
   return (
     <div className="bg-gradient-to-br from-slate-900/95 to-slate-950/95 border border-emerald-500/30 rounded-xl p-4 shadow-xl backdrop-blur-md relative overflow-hidden transition-all duration-300 flex flex-col gap-3">
@@ -99,7 +111,7 @@ export const ExplainabilityCard: React.FC<ExplainabilityProps> = ({
 
       {/* Core Explanation */}
       <p className="text-sm text-slate-200 leading-relaxed font-normal">
-        {narrative.why_it_matters_explanation}
+        {explanationText}
       </p>
 
       {/* Leverage & Timing Bar */}
@@ -181,12 +193,12 @@ export const ExplainabilityCard: React.FC<ExplainabilityProps> = ({
                 </div>
 
                 <div className="flex items-center gap-1">
-                  {claim.status === "verified" ? (
+                  {isVerified(claim.status) ? (
                     <span className="inline-flex items-center gap-0.5 text-emerald-400 text-[10px] font-bold">
                       <CheckCircle2 className="w-3 h-3" />
                       <span>Pass</span>
                     </span>
-                  ) : claim.status === "unverified" ? (
+                  ) : isUnverified(claim.status) ? (
                     <span
                       className="inline-flex items-center gap-0.5 text-amber-400 text-[10px] font-bold"
                       title={claim.details || "No ground truth available"}

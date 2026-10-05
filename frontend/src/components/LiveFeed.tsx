@@ -43,7 +43,7 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
     const personaTranslations = (narrative as any).translations_by_persona?.[activePersona];
     if (personaTranslations && personaTranslations[activeLanguage]) {
       const trans = personaTranslations[activeLanguage];
-      if (trans && trans !== personaText) {
+      if (trans) {
         return { text: trans, isTranslated: true, langBadge: activeLanguage.toUpperCase() };
       }
     }
@@ -51,7 +51,7 @@ export const LiveFeed: React.FC<LiveFeedProps> = ({
     // Fall back to general translations
     if (narrative.translations && narrative.translations[activeLanguage]) {
       const trans = narrative.translations[activeLanguage];
-      if (trans && trans !== personaText) {
+      if (trans) {
         return { text: trans, isTranslated: true, langBadge: activeLanguage.toUpperCase() };
       }
     }

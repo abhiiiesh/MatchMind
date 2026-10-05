@@ -427,6 +427,8 @@ class ReplaySession:
 
     async def _dispatch_event(self, event: MatchEvent) -> None:
         """Publishes RAW_EVENT to orchestrator."""
+        if not self.orchestrator:
+            return
         raw_msg = AgentMessage(
             source_agent="replay_engine",
             target_agents=["ingestion_agent"],

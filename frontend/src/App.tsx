@@ -182,6 +182,15 @@ export const App: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setTimeline(data.timeline);
+        try {
+          const stateRes = await fetch(apiUrl(`/api/match/${newMatchId}/state`));
+          if (stateRes.ok) {
+            const stateData = await stateRes.json();
+            setMetrics(stateData);
+          }
+        } catch {
+          // fallback to timeline summary
+        }
       }
     } catch (err) {
       console.error("Failed to switch match", err);
@@ -460,6 +469,7 @@ export const App: React.FC = () => {
           />
           <ExplainabilityCard
             narrative={latestNarrative}
+            activeLanguage={activeLanguage}
             onSelectPlayer={setFocusedPlayer}
             currentEventPlayerName={currentEvent?.player?.name}
           />

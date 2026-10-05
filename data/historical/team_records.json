@@ -37,6 +37,39 @@
         "Unbeaten in their last 34 Premier League fixtures played between February and May",
         "Average 66.8% possession, suffocating opposing counter-attacks through tactical rest-defense"
       ]
+    },
+    "Chelsea": {
+      "stadium": "Stamford Bridge",
+      "win_rate_leading_at_halftime": 78.5,
+      "comeback_win_rate_trailing_at_halftime": 16.0,
+      "goals_conceded_per_match": 1.35,
+      "tactical_profile": "High-speed vertical transitions, inverted full-backs, dynamic attacking wing overloads",
+      "historical_trends": [
+        "Cole Palmer has registered over 30 direct goal contributions in the 2023-24 season",
+        "Averages 3.8 fast-break counter-attacks per 90 away from home against Top 6 opposition"
+      ]
+    },
+    "Tottenham Hotspur": {
+      "stadium": "Tottenham Hotspur Stadium",
+      "win_rate_leading_at_halftime": 75.0,
+      "comeback_win_rate_trailing_at_halftime": 25.0,
+      "goals_conceded_per_match": 1.45,
+      "tactical_profile": "Ultra-aggressive high line, inverted full-backs, relentless pressing tempo ('Ange-Ball')",
+      "historical_trends": [
+        "Scored in 39 consecutive Premier League games under Ange Postecoglou",
+        "Maintains a high defensive line with average centroid at 48.5 meters"
+      ]
+    },
+    "Newcastle United": {
+      "stadium": "St. James' Park",
+      "win_rate_leading_at_halftime": 80.0,
+      "comeback_win_rate_trailing_at_halftime": 14.5,
+      "goals_conceded_per_match": 1.30,
+      "tactical_profile": "Fierce midfield duel dominance, rapid direct wing transitions, intense physical pressing",
+      "historical_trends": [
+        "Unbeaten in 82% of home fixtures when scoring the first goal",
+        "Bruno Guimarães leads the league in ground duels won in the midfield third"
+      ]
     }
   }
 }
